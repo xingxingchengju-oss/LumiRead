@@ -1,0 +1,2274 @@
+{
+  "protocol": "LumiRead CPU browser replay v1",
+  "summary": {
+    "development": {
+      "sessions": 1,
+      "frames": 20,
+      "positive": 20,
+      "true_positive": 14,
+      "false_positive": 0,
+      "true_negative": 0,
+      "false_negative": 6,
+      "held_gestures": 1,
+      "exactly_one_shutter": 1,
+      "writing_s": 0,
+      "writing_shutters": 0
+    },
+    "test": {
+      "sessions": 4,
+      "frames": 181,
+      "positive": 60,
+      "true_positive": 20,
+      "false_positive": 0,
+      "true_negative": 121,
+      "false_negative": 40,
+      "held_gestures": 3,
+      "exactly_one_shutter": 1,
+      "writing_s": 60,
+      "writing_shutters": 0
+    },
+    "new_test": {
+      "sessions": 3,
+      "frames": 161,
+      "positive": 40,
+      "true_positive": 20,
+      "false_positive": 0,
+      "true_negative": 121,
+      "false_negative": 20,
+      "held_gestures": 2,
+      "exactly_one_shutter": 1,
+      "writing_s": 60,
+      "writing_shutters": 0
+    }
+  },
+  "results": [
+    {
+      "session": "rocketmann",
+      "split": "development",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": true,
+          "shutter": true
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "rdne",
+      "split": "test",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "thirdman",
+      "split": "test",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": true
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "taryn",
+      "split": "test",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "handwriting",
+      "split": "test",
+      "label": "writing",
+      "frames": [
+        {
+          "time_s": 30,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 30.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 31,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 31.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 32,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 32.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 33,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 33.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 34,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 34.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 35,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 35.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 36,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 36.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 37,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 37.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 38,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 38.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 39,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 39.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 40,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 40.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 41,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 41.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 42,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 42.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 43,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 43.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 44,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 44.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 45,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 45.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 46,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 46.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 47,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 47.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 48,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 48.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 49,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 49.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 50,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 50.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 51,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 51.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 52,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 52.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 53,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 53.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 54,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 54.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 55,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 55.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 56,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 56.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 57,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 57.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 58,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 58.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 59,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 59.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 60,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 60.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 61,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 61.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 62,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 62.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 63,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 63.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 64,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 64.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 65,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 65.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 66,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 66.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 67,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 67.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 68,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 68.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 69,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 69.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 70,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 70.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 71,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 71.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 72,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 72.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 73,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 73.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 74,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 74.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 75,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 75.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 76,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 76.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 77,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 77.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 78,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 78.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 79,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 79.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 80,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 80.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 81,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 81.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 82,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 82.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 83,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 83.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 84,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 84.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 85,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 85.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 86,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 86.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 87,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 87.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 88,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 88.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 89,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 89.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 90,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "artem",
+      "split": "new_test",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": true
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": true,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "pnw",
+      "split": "new_test",
+      "label": "victory",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.2,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.4,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.6,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.8,
+          "expected": true,
+          "predicted": false,
+          "shutter": false
+        }
+      ]
+    },
+    {
+      "session": "cottonbro",
+      "split": "new_test",
+      "label": "writing",
+      "frames": [
+        {
+          "time_s": 2,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 2.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 3.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 4.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 5.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 6,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 6.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 7,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 7.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 8,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 8.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 9,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 9.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 10,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 10.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 11,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 11.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 12,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 12.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 13,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 13.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 14,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 14.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 15,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 15.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 16,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 16.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 17,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 17.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 18,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 18.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 19,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 19.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 20,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 20.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 21,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 21.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 22,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 22.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 23,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 23.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 24,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 24.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 25,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 25.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 26,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 26.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 27,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 27.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 28,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 28.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 29,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 29.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 30,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 30.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 31,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 31.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 32,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 32.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 33,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 33.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 34,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 34.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 35,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 35.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 36,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 36.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 37,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 37.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 38,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 38.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 39,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 39.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 40,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 40.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 41,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 41.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 42,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 42.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 43,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 43.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 44,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 44.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 45,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 45.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 46,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 46.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 47,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 47.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 48,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 48.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 49,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 49.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 50,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 50.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 51,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 51.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 52,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 52.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 53,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 53.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 54,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 54.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 55,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 55.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 56,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 56.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 57,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 57.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 58,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 58.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 59,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 59.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 60,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 60.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 61,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 61.5,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        },
+        {
+          "time_s": 62,
+          "expected": false,
+          "predicted": false,
+          "shutter": false
+        }
+      ]
+    }
+  ]
+}

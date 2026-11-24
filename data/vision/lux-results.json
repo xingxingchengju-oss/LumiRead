@@ -1,0 +1,231 @@
+{
+  "source": "10.5281/zenodo.20657011",
+  "device": "Samsung Galaxy A16, ISO 50, 1/50 s, WB 4000 K",
+  "meter": "Lutron LX-101A",
+  "feature": "square_mean_luma",
+  "classes": [
+    "<300 lx",
+    "300–<500 lx",
+    "≥500 lx"
+  ],
+  "split": "leave one complete scene family out",
+  "row_order": "true",
+  "column_order": "predicted",
+  "folds": [
+    {
+      "held_out_scene_family": "beige_table",
+      "train_n": 1294,
+      "train_class_counts": [
+        260,
+        226,
+        808
+      ],
+      "luma_cutoffs": [
+        77,
+        123
+      ],
+      "n": 269,
+      "class_counts": [
+        39,
+        86,
+        144
+      ],
+      "accuracy": 0.8401486988847584,
+      "macro_f1": 0.8454796837149777,
+      "confusion_matrix": [
+        [
+          39,
+          0,
+          0
+        ],
+        [
+          10,
+          76,
+          0
+        ],
+        [
+          0,
+          33,
+          111
+        ]
+      ]
+    },
+    {
+      "held_out_scene_family": "brown_wood_like",
+      "train_n": 1066,
+      "train_class_counts": [
+        230,
+        217,
+        619
+      ],
+      "luma_cutoffs": [
+        78,
+        120
+      ],
+      "n": 497,
+      "class_counts": [
+        69,
+        95,
+        333
+      ],
+      "accuracy": 0.8611670020120724,
+      "macro_f1": 0.8299807197046295,
+      "confusion_matrix": [
+        [
+          67,
+          2,
+          0
+        ],
+        [
+          13,
+          72,
+          10
+        ],
+        [
+          0,
+          44,
+          289
+        ]
+      ]
+    },
+    {
+      "held_out_scene_family": "laminate",
+      "train_n": 1066,
+      "train_class_counts": [
+        215,
+        229,
+        622
+      ],
+      "luma_cutoffs": [
+        76,
+        121
+      ],
+      "n": 497,
+      "class_counts": [
+        84,
+        83,
+        330
+      ],
+      "accuracy": 0.8812877263581489,
+      "macro_f1": 0.8413416529270187,
+      "confusion_matrix": [
+        [
+          72,
+          12,
+          0
+        ],
+        [
+          9,
+          73,
+          1
+        ],
+        [
+          0,
+          37,
+          293
+        ]
+      ]
+    },
+    {
+      "held_out_scene_family": "other_table",
+      "train_n": 1461,
+      "train_class_counts": [
+        242,
+        287,
+        932
+      ],
+      "luma_cutoffs": [
+        77,
+        121
+      ],
+      "n": 102,
+      "class_counts": [
+        57,
+        25,
+        20
+      ],
+      "accuracy": 0.9117647058823529,
+      "macro_f1": 0.8708133971291865,
+      "confusion_matrix": [
+        [
+          56,
+          1,
+          0
+        ],
+        [
+          1,
+          24,
+          0
+        ],
+        [
+          0,
+          7,
+          13
+        ]
+      ]
+    },
+    {
+      "held_out_scene_family": "white_table",
+      "train_n": 1365,
+      "train_class_counts": [
+        249,
+        289,
+        827
+      ],
+      "luma_cutoffs": [
+        77,
+        121
+      ],
+      "n": 198,
+      "class_counts": [
+        50,
+        23,
+        125
+      ],
+      "accuracy": 0.9545454545454546,
+      "macro_f1": 0.9182992776057791,
+      "confusion_matrix": [
+        [
+          45,
+          5,
+          0
+        ],
+        [
+          0,
+          21,
+          2
+        ],
+        [
+          0,
+          2,
+          123
+        ]
+      ]
+    }
+  ],
+  "n": 1563,
+  "class_counts": [
+    299,
+    312,
+    952
+  ],
+  "accuracy": 0.8790786948176583,
+  "macro_f1": 0.8584375945862522,
+  "confusion_matrix": [
+    [
+      279,
+      20,
+      0
+    ],
+    [
+      33,
+      266,
+      13
+    ],
+    [
+      0,
+      123,
+      829
+    ]
+  ]
+}

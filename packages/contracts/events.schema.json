@@ -1,0 +1,55 @@
+{
+  "properties": {
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "seq": {
+      "title": "Seq",
+      "type": "integer"
+    },
+    "type": {
+      "enum": [
+        "capture.received",
+        "grading.queued",
+        "grading.running",
+        "grading.completed",
+        "grading.failed",
+        "session.privacy",
+        "question.reviewed",
+        "mistake.saved",
+        "mastery.updated",
+        "recommendations.ready",
+        "telemetry.updated",
+        "alert.raised",
+        "alert.cleared"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_id",
+    "session_id",
+    "seq",
+    "type",
+    "occurred_at",
+    "payload"
+  ],
+  "title": "Event",
+  "type": "object"
+}

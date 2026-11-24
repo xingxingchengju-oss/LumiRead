@@ -1,0 +1,3461 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LumiRead",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/demo/accounts": {
+      "get": {
+        "summary": "Accounts",
+        "operationId": "accounts_api_v1_demo_accounts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accounts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/login": {
+      "post": {
+        "summary": "Login",
+        "operationId": "login_api_v1_demo_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/profile": {
+      "get": {
+        "summary": "Profile",
+        "operationId": "profile_api_v1_demo_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/reset": {
+      "post": {
+        "summary": "Reset",
+        "operationId": "reset_api_v1_demo_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/logout": {
+      "post": {
+        "summary": "Logout",
+        "operationId": "logout_api_v1_demo_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/v1/federated": {
+      "get": {
+        "summary": "Federated",
+        "operationId": "federated_api_v1_federated_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/clouclip": {
+      "get": {
+        "tags": [
+          "Clouclip"
+        ],
+        "summary": "Read",
+        "operationId": "read_api_v1_sessions__sid__clouclip_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/clouclip/control": {
+      "post": {
+        "tags": [
+          "Clouclip"
+        ],
+        "summary": "Update",
+        "operationId": "update_api_v1_sessions__sid__clouclip_control_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Control"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_api_v1_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readiness"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "post": {
+        "summary": "Create Session",
+        "operationId": "create_session_api_v1_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSession"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "summary": "Me",
+        "operationId": "me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/phone-setup": {
+      "get": {
+        "summary": "Phone Setup",
+        "operationId": "phone_setup_api_v1_sessions__sid__phone_setup_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneSetup"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/invites": {
+      "post": {
+        "summary": "Invite",
+        "operationId": "invite_api_v1_sessions__sid__invites_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Invitation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invite"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/qr": {
+      "get": {
+        "summary": "Qr",
+        "operationId": "qr_api_v1_sessions__sid__qr_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/join": {
+      "post": {
+        "summary": "Join",
+        "operationId": "join_api_v1_sessions__sid__join_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Join"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/snapshot": {
+      "get": {
+        "summary": "Snapshot",
+        "operationId": "snapshot_api_v1_sessions__sid__snapshot_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/settings": {
+      "patch": {
+        "summary": "Settings",
+        "operationId": "settings_api_v1_sessions__sid__settings_patch",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Privacy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Privacy"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/captures": {
+      "post": {
+        "summary": "Capture",
+        "operationId": "capture_api_v1_sessions__sid__captures_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_capture_api_v1_sessions__sid__captures_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/homework": {
+      "get": {
+        "summary": "Homework",
+        "operationId": "homework_api_v1_sessions__sid__homework_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  },
+                  "title": "Response Homework Api V1 Sessions  Sid  Homework Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{jid}": {
+      "get": {
+        "summary": "Job",
+        "operationId": "job_api_v1_jobs__jid__get",
+        "parameters": [
+          {
+            "name": "jid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Jid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/captures/{cid}/photo": {
+      "get": {
+        "summary": "Original",
+        "operationId": "original_api_v1_captures__cid__photo_get",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{jid}/retry": {
+      "post": {
+        "summary": "Retry",
+        "operationId": "retry_api_v1_jobs__jid__retry_post",
+        "parameters": [
+          {
+            "name": "jid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Jid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobId"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{jid}/seen": {
+      "post": {
+        "summary": "Seen",
+        "operationId": "seen_api_v1_jobs__jid__seen_post",
+        "parameters": [
+          {
+            "name": "jid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Jid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Receipt"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/events": {
+      "get": {
+        "summary": "Events",
+        "operationId": "events_api_v1_sessions__sid__events_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  },
+                  "title": "Response Events Api V1 Sessions  Sid  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "summary": "Catalog",
+        "operationId": "catalog_api_v1_products_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/{lid}/mastery": {
+      "get": {
+        "summary": "Learner Mastery",
+        "operationId": "learner_mastery_api_v1_learners__lid__mastery_get",
+        "parameters": [
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mastery"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/{lid}/recommendations": {
+      "get": {
+        "summary": "Recommendations",
+        "operationId": "recommendations_api_v1_learners__lid__recommendations_get",
+        "parameters": [
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Exercises"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recommendations/{rid}/attempts": {
+      "post": {
+        "summary": "Practice",
+        "operationId": "practice_api_v1_recommendations__rid__attempts_post",
+        "parameters": [
+          {
+            "name": "rid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeAnswer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/{lid}/mistakes/{qid}": {
+      "put": {
+        "summary": "Archive",
+        "operationId": "archive_api_v1_learners__lid__mistakes__qid__put",
+        "parameters": [
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          },
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mistake"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learners/{lid}/mistakes": {
+      "get": {
+        "summary": "Mistakes",
+        "operationId": "mistakes_api_v1_learners__lid__mistakes_get",
+        "parameters": [
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          },
+          {
+            "name": "skill",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "mixed_arithmetic",
+                    "fractions",
+                    "decimals",
+                    "equations",
+                    "area",
+                    "word_modeling"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Skill"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mistakes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/questions/{qid}/review": {
+      "patch": {
+        "summary": "Review",
+        "operationId": "review_api_v1_questions__qid__review_patch",
+        "parameters": [
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Review"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/telemetry/batch": {
+      "post": {
+        "summary": "Telemetry Batch",
+        "operationId": "telemetry_batch_api_v1_sessions__sid__telemetry_batch_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Batch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Received"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/telemetry": {
+      "get": {
+        "summary": "Telemetry",
+        "operationId": "telemetry_api_v1_sessions__sid__telemetry_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 300,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Samples"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/alerts": {
+      "get": {
+        "summary": "Alerts",
+        "operationId": "alerts_api_v1_sessions__sid__alerts_get",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Alerts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{sid}/alerts/{aid}/seen": {
+      "post": {
+        "summary": "Alert Seen",
+        "operationId": "alert_seen_api_v1_sessions__sid__alerts__aid__seen_post",
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Sid"
+            }
+          },
+          {
+            "name": "aid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Aid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/glasses": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_glasses_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_app_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/federated": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_federated_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy-app": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_legacy_app_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/showcase": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_showcase_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "segment": {
+            "type": "string",
+            "enum": [
+              "stable",
+              "near",
+              "dim"
+            ],
+            "title": "Segment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "segment"
+        ],
+        "title": "Account"
+      },
+      "Accounts": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            },
+            "type": "array",
+            "title": "Accounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accounts"
+        ],
+        "title": "Accounts"
+      },
+      "Alert": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "distance_cm",
+              "brightness",
+              "head_tilt_deg",
+              "reading_seconds"
+            ],
+            "title": "Metric"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "value_kind": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "estimated",
+              "simulated"
+            ],
+            "title": "Value Kind"
+          },
+          "input_mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "accelerated"
+            ],
+            "title": "Input Mode"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "missing"
+            ],
+            "title": "Quality"
+          },
+          "calibration_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Id"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "unit",
+          "value_kind",
+          "input_mode",
+          "method",
+          "quality",
+          "observed_at",
+          "id",
+          "started_at",
+          "ended_at",
+          "reason"
+        ],
+        "title": "Alert"
+      },
+      "Alerts": {
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "type": "array",
+            "title": "Alerts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "alerts"
+        ],
+        "title": "Alerts"
+      },
+      "Batch": {
+        "properties": {
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/RearCameraSample"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "samples"
+        ],
+        "title": "Batch"
+      },
+      "Body_capture_api_v1_sessions__sid__captures_post": {
+        "properties": {
+          "photo": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Photo"
+          },
+          "idem": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Idem"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "camera",
+              "native_camera",
+              "upload",
+              "double_tap"
+            ],
+            "title": "Source"
+          },
+          "phone_confirmed": {
+            "type": "boolean",
+            "title": "Phone Confirmed",
+            "default": false
+          },
+          "tap_side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tap Side"
+          }
+        },
+        "type": "object",
+        "required": [
+          "photo",
+          "idem",
+          "source"
+        ],
+        "title": "Body_capture_api_v1_sessions__sid__captures_post"
+      },
+      "CaptureReceipt": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "capture_id": {
+            "type": "string",
+            "title": "Capture Id"
+          },
+          "tap_side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tap Side"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "capture_id"
+        ],
+        "title": "CaptureReceipt"
+      },
+      "Catalog": {
+        "properties": {
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            },
+            "type": "array",
+            "title": "Products"
+          },
+          "subscription_cny": {
+            "type": "integer",
+            "title": "Subscription Cny"
+          },
+          "assistant_path": {
+            "type": "string",
+            "title": "Assistant Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "products",
+          "subscription_cny",
+          "assistant_path"
+        ],
+        "title": "Catalog"
+      },
+      "Control": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "play",
+              "pause",
+              "replay",
+              "speed"
+            ],
+            "title": "Action"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  1,
+                  4,
+                  10
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Generation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "generation"
+        ],
+        "title": "Control"
+      },
+      "CreateSession": {
+        "properties": {},
+        "type": "object",
+        "title": "CreateSession"
+      },
+      "Episode": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "Dis",
+              "Lux"
+            ],
+            "title": "Metric"
+          },
+          "start_line": {
+            "type": "integer",
+            "title": "Start Line"
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Line"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "start_line",
+          "started_at"
+        ],
+        "title": "Episode"
+      },
+      "Event": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "capture.received",
+              "grading.queued",
+              "grading.running",
+              "grading.completed",
+              "grading.failed",
+              "session.privacy",
+              "question.reviewed",
+              "mistake.saved",
+              "mastery.updated",
+              "recommendations.ready",
+              "telemetry.updated",
+              "alert.raised",
+              "alert.cleared"
+            ],
+            "title": "Type"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "session_id",
+          "seq",
+          "type",
+          "occurred_at",
+          "payload"
+        ],
+        "title": "Event"
+      },
+      "Excerpt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "stable",
+              "near",
+              "dim"
+            ],
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "first_line": {
+            "type": "integer",
+            "title": "First Line"
+          },
+          "last_line": {
+            "type": "integer",
+            "title": "Last Line"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "starts_at": {
+            "type": "string",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "type": "string",
+            "title": "Ends At"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds"
+          },
+          "total_samples": {
+            "type": "integer",
+            "title": "Total Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "first_line",
+          "last_line",
+          "sha256",
+          "starts_at",
+          "ends_at",
+          "duration_seconds",
+          "total_samples"
+        ],
+        "title": "Excerpt"
+      },
+      "Exercise": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "mixed_arithmetic",
+              "fractions",
+              "decimals",
+              "equations",
+              "area",
+              "word_modeling"
+            ],
+            "title": "Skill"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "skill",
+          "question"
+        ],
+        "title": "Exercise"
+      },
+      "Exercises": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Exercise"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Exercises"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HistoricalAnswer": {
+        "properties": {
+          "source_order": {
+            "type": "integer",
+            "title": "Source Order"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "mixed_arithmetic",
+              "fractions",
+              "decimals",
+              "equations",
+              "area",
+              "word_modeling"
+            ],
+            "title": "Skill"
+          },
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "original_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_order",
+          "skill",
+          "correct",
+          "original_time"
+        ],
+        "title": "HistoricalAnswer"
+      },
+      "Hotspot": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "position": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Position"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "description",
+          "position"
+        ],
+        "title": "Hotspot"
+      },
+      "Invitation": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "glasses",
+              "parent"
+            ],
+            "title": "Role",
+            "default": "glasses"
+          }
+        },
+        "type": "object",
+        "title": "Invitation"
+      },
+      "Invite": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "code",
+          "session_id"
+        ],
+        "title": "Invite"
+      },
+      "Job": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "capture_id": {
+            "type": "string",
+            "title": "Capture Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QuestionResult"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          },
+          "latency": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency"
+          },
+          "created": {
+            "type": "number",
+            "title": "Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "capture_id",
+          "session_id",
+          "status",
+          "error",
+          "result",
+          "provider",
+          "model",
+          "request_id",
+          "usage",
+          "latency",
+          "created"
+        ],
+        "title": "Job"
+      },
+      "JobId": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "title": "JobId"
+      },
+      "Join": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 6,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Join"
+      },
+      "Login": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "title": "Account Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id"
+        ],
+        "title": "Login"
+      },
+      "Mastery": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "device": {
+            "type": "string",
+            "title": "Device"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillPrediction"
+            },
+            "type": "array",
+            "title": "Skills"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "device",
+          "model_version",
+          "skills"
+        ],
+        "title": "Mastery"
+      },
+      "Mistake": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "student_answer": {
+            "type": "string",
+            "title": "Student Answer"
+          },
+          "reference_answer": {
+            "type": "string",
+            "title": "Reference Answer"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "mixed_arithmetic",
+              "fractions",
+              "decimals",
+              "equations",
+              "area",
+              "word_modeling"
+            ],
+            "title": "Skill"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "incorrect",
+              "needs_review"
+            ],
+            "title": "Verdict"
+          },
+          "hints": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hints"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "review_reason": {
+            "type": "string",
+            "title": "Review Reason"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "visual",
+              "sympy",
+              "conflict"
+            ],
+            "title": "Verification"
+          },
+          "capture_id": {
+            "type": "string",
+            "title": "Capture Id"
+          },
+          "created": {
+            "type": "number",
+            "title": "Created"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question",
+          "student_answer",
+          "reference_answer",
+          "skill",
+          "verdict",
+          "hints",
+          "explanation",
+          "review_reason",
+          "id",
+          "revision",
+          "verification",
+          "capture_id",
+          "created"
+        ],
+        "title": "Mistake"
+      },
+      "Mistakes": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Mistake"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "Mistakes"
+      },
+      "PhoneSetup": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "lan",
+              "public"
+            ],
+            "title": "Mode",
+            "default": "lan"
+          },
+          "public_unavailable": {
+            "type": "boolean",
+            "title": "Public Unavailable",
+            "default": false
+          },
+          "certificate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate"
+          },
+          "fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fingerprint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "certificate",
+          "fingerprint"
+        ],
+        "title": "PhoneSetup"
+      },
+      "Playback": {
+        "properties": {
+          "segment": {
+            "$ref": "#/components/schemas/Excerpt"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "playing",
+              "paused",
+              "finished"
+            ],
+            "title": "Status"
+          },
+          "speed": {
+            "type": "integer",
+            "enum": [
+              1,
+              4,
+              10
+            ],
+            "title": "Speed"
+          },
+          "generation": {
+            "type": "integer",
+            "title": "Generation"
+          },
+          "position_seconds": {
+            "type": "number",
+            "title": "Position Seconds"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Episode"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "segment",
+          "source",
+          "status",
+          "speed",
+          "generation",
+          "position_seconds",
+          "records",
+          "events"
+        ],
+        "title": "Playback"
+      },
+      "PracticeAnswer": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Answer"
+          },
+          "idem": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Idem"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "idem"
+        ],
+        "title": "PracticeAnswer"
+      },
+      "PracticeResult": {
+        "properties": {
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "reference_answer": {
+            "type": "string",
+            "title": "Reference Answer"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correct",
+          "question",
+          "reference_answer",
+          "explanation"
+        ],
+        "title": "PracticeResult"
+      },
+      "Privacy": {
+        "properties": {
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "silent"
+        ],
+        "title": "Privacy"
+      },
+      "Product": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "price_cny": {
+            "type": "integer",
+            "title": "Price Cny"
+          },
+          "weight_g": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight G"
+          },
+          "image_url": {
+            "type": "string",
+            "title": "Image Url"
+          },
+          "model_url": {
+            "type": "string",
+            "title": "Model Url"
+          },
+          "hotspots": {
+            "items": {
+              "$ref": "#/components/schemas/Hotspot"
+            },
+            "type": "array",
+            "title": "Hotspots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku",
+          "name",
+          "description",
+          "price_cny",
+          "weight_g",
+          "image_url",
+          "model_url",
+          "hotspots"
+        ],
+        "title": "Product"
+      },
+      "Profile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "segment": {
+            "type": "string",
+            "enum": [
+              "stable",
+              "near",
+              "dim"
+            ],
+            "title": "Segment"
+          },
+          "account_id": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "title": "Account Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id"
+          },
+          "learner_hash": {
+            "type": "string",
+            "title": "Learner Hash"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "validation",
+              "test"
+            ],
+            "title": "Split"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "time_basis": {
+            "type": "string",
+            "title": "Time Basis"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalAnswer"
+            },
+            "type": "array",
+            "title": "History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "segment",
+          "account_id",
+          "session_id",
+          "learner_id",
+          "learner_hash",
+          "split",
+          "source",
+          "selection",
+          "time_basis",
+          "history"
+        ],
+        "title": "Profile"
+      },
+      "QuestionResult": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "student_answer": {
+            "type": "string",
+            "title": "Student Answer"
+          },
+          "reference_answer": {
+            "type": "string",
+            "title": "Reference Answer"
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "mixed_arithmetic",
+              "fractions",
+              "decimals",
+              "equations",
+              "area",
+              "word_modeling"
+            ],
+            "title": "Skill"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "correct",
+              "incorrect",
+              "needs_review"
+            ],
+            "title": "Verdict"
+          },
+          "hints": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hints"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "review_reason": {
+            "type": "string",
+            "title": "Review Reason"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "verification": {
+            "type": "string",
+            "enum": [
+              "visual",
+              "sympy",
+              "conflict"
+            ],
+            "title": "Verification"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question",
+          "student_answer",
+          "reference_answer",
+          "skill",
+          "verdict",
+          "hints",
+          "explanation",
+          "review_reason",
+          "id",
+          "revision",
+          "verification"
+        ],
+        "title": "QuestionResult"
+      },
+      "Readiness": {
+        "properties": {
+          "api": {
+            "type": "string",
+            "const": "ready",
+            "title": "Api"
+          },
+          "vision_configured": {
+            "type": "boolean",
+            "title": "Vision Configured"
+          },
+          "model": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "api",
+          "vision_configured",
+          "model"
+        ],
+        "title": "Readiness"
+      },
+      "RearCameraSample": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "distance_cm",
+              "brightness",
+              "reading_seconds"
+            ],
+            "title": "Metric"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "value_kind": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "estimated",
+              "simulated"
+            ],
+            "title": "Value Kind"
+          },
+          "input_mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "accelerated"
+            ],
+            "title": "Input Mode"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "missing"
+            ],
+            "title": "Quality"
+          },
+          "calibration_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Id"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "unit",
+          "value_kind",
+          "input_mode",
+          "method",
+          "quality",
+          "observed_at"
+        ],
+        "title": "RearCameraSample",
+        "description": "Live submissions from the wearer camera; historical samples remain readable."
+      },
+      "Receipt": {
+        "properties": {
+          "view_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "View Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "view_id"
+        ],
+        "title": "Receipt"
+      },
+      "Received": {
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "active_alerts": {
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "type": "array",
+            "title": "Active Alerts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accepted",
+          "active_alerts"
+        ],
+        "title": "Received"
+      },
+      "Record": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "Date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "Dis": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dis"
+          },
+          "Lux": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lux"
+          },
+          "distance_cm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Cm"
+          },
+          "illuminance_lx": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Illuminance Lx"
+          },
+          "offset_seconds": {
+            "type": "integer",
+            "title": "Offset Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "Date",
+          "Dis",
+          "Lux",
+          "distance_cm",
+          "illuminance_lx",
+          "offset_seconds"
+        ],
+        "title": "Record"
+      },
+      "Reset": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id"
+        ],
+        "title": "Reset"
+      },
+      "Review": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 1,
+            "title": "Question"
+          },
+          "student_answer": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Student Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "revision",
+          "question",
+          "student_answer"
+        ],
+        "title": "Review"
+      },
+      "Sample": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "distance_cm",
+              "brightness",
+              "head_tilt_deg",
+              "reading_seconds"
+            ],
+            "title": "Metric"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "value_kind": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "estimated",
+              "simulated"
+            ],
+            "title": "Value Kind"
+          },
+          "input_mode": {
+            "type": "string",
+            "enum": [
+              "live",
+              "accelerated"
+            ],
+            "title": "Input Mode"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "missing"
+            ],
+            "title": "Quality"
+          },
+          "calibration_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calibration Id"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "unit",
+          "value_kind",
+          "input_mode",
+          "method",
+          "quality",
+          "observed_at"
+        ],
+        "title": "Sample"
+      },
+      "Samples": {
+        "properties": {
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/Sample"
+            },
+            "type": "array",
+            "title": "Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "samples"
+        ],
+        "title": "Samples"
+      },
+      "Session": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "parent",
+              "glasses"
+            ],
+            "title": "Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "role"
+        ],
+        "title": "Session"
+      },
+      "SkillPrediction": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "enum": [
+              "mixed_arithmetic",
+              "fractions",
+              "decimals",
+              "equations",
+              "area",
+              "word_modeling"
+            ],
+            "title": "Skill"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "evidence_count": {
+            "type": "integer",
+            "title": "Evidence Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "probability",
+          "evidence_count"
+        ],
+        "title": "SkillPrediction"
+      },
+      "Snapshot": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "parent",
+              "glasses"
+            ],
+            "title": "Role"
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id"
+          },
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "role",
+          "learner_id",
+          "silent",
+          "seq"
+        ],
+        "title": "Snapshot"
+      },
+      "Source": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "title": "Dataset"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "file_url": {
+            "type": "string",
+            "title": "File Url"
+          },
+          "supplement": {
+            "type": "string",
+            "title": "Supplement"
+          },
+          "article": {
+            "type": "string",
+            "title": "Article"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset",
+          "commit",
+          "sha256",
+          "file_url",
+          "supplement",
+          "article",
+          "timezone"
+        ],
+        "title": "Source"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

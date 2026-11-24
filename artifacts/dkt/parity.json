@@ -1,0 +1,387 @@
+{
+  "reference_device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4080 SUPER",
+  "tolerance": 0.0001,
+  "export_max_abs_error": 3.780310853096491e-05,
+  "cases": [
+    {
+      "history": [],
+      "reference": {
+        "mixed_arithmetic": 0.4770514965057373,
+        "fractions": 0.5608640313148499,
+        "decimals": 0.40205803513526917,
+        "equations": 0.4991430342197418,
+        "area": 0.7649657726287842,
+        "word_modeling": 0.7317714095115662
+      }
+    },
+    {
+      "history": [
+        [
+          "mixed_arithmetic",
+          false
+        ]
+      ],
+      "reference": {
+        "mixed_arithmetic": 0.38758373260498047,
+        "fractions": 0.6309880018234253,
+        "decimals": 0.6643278002738953,
+        "equations": 0.5488086342811584,
+        "area": 0.6958757042884827,
+        "word_modeling": 0.6320797801017761
+      }
+    },
+    {
+      "history": [
+        [
+          "mixed_arithmetic",
+          true
+        ]
+      ],
+      "reference": {
+        "mixed_arithmetic": 0.6819036602973938,
+        "fractions": 0.6926157474517822,
+        "decimals": 0.5240556597709656,
+        "equations": 0.6390944719314575,
+        "area": 0.695611298084259,
+        "word_modeling": 0.7355445623397827
+      }
+    },
+    {
+      "history": [
+        [
+          "mixed_arithmetic",
+          true
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "decimals",
+          true
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "area",
+          true
+        ],
+        [
+          "word_modeling",
+          false
+        ]
+      ],
+      "reference": {
+        "mixed_arithmetic": 0.6746437549591064,
+        "fractions": 0.5998325347900391,
+        "decimals": 0.6453410983085632,
+        "equations": 0.5915991067886353,
+        "area": 0.6009231209754944,
+        "word_modeling": 0.8013367652893066
+      }
+    },
+    {
+      "history": [
+        [
+          "word_modeling",
+          true
+        ],
+        [
+          "area",
+          true
+        ],
+        [
+          "equations",
+          true
+        ],
+        [
+          "decimals",
+          true
+        ],
+        [
+          "fractions",
+          true
+        ],
+        [
+          "mixed_arithmetic",
+          true
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          true
+        ],
+        [
+          "area",
+          true
+        ],
+        [
+          "equations",
+          true
+        ],
+        [
+          "decimals",
+          true
+        ],
+        [
+          "fractions",
+          true
+        ],
+        [
+          "mixed_arithmetic",
+          true
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          true
+        ],
+        [
+          "area",
+          true
+        ],
+        [
+          "equations",
+          true
+        ],
+        [
+          "decimals",
+          true
+        ],
+        [
+          "fractions",
+          true
+        ],
+        [
+          "mixed_arithmetic",
+          true
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          true
+        ],
+        [
+          "area",
+          true
+        ],
+        [
+          "equations",
+          true
+        ],
+        [
+          "decimals",
+          true
+        ],
+        [
+          "fractions",
+          true
+        ],
+        [
+          "mixed_arithmetic",
+          true
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ],
+        [
+          "word_modeling",
+          false
+        ],
+        [
+          "area",
+          false
+        ],
+        [
+          "equations",
+          false
+        ],
+        [
+          "decimals",
+          false
+        ],
+        [
+          "fractions",
+          false
+        ],
+        [
+          "mixed_arithmetic",
+          false
+        ]
+      ],
+      "reference": {
+        "mixed_arithmetic": 0.6124619841575623,
+        "fractions": 0.5775172710418701,
+        "decimals": 0.6198250651359558,
+        "equations": 0.5508893132209778,
+        "area": 0.5537257194519043,
+        "word_modeling": 0.6960269212722778
+      }
+    }
+  ]
+}

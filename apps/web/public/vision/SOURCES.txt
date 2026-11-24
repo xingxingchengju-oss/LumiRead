@@ -1,0 +1,2 @@
+LumiRead paper marker. The active QR square is 50 mm wide.
+Decoded with jsQR 1.4.0 (Apache License 2.0). https://github.com/cozmo/jsQR

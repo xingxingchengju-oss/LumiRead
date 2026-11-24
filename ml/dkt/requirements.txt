@@ -1,0 +1,6 @@
+# The training and evaluation environment is separate from the FastAPI project.
+torch>=2.5,<3
+numpy>=1.26,<3
+lightgbm>=4.6,<5
+scikit-learn>=1.4,<2
+matplotlib>=3.8,<4

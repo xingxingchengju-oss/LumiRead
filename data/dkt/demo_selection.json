@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "registered_at_utc": "2026-11-23T08:14:11.425360+00:00",
+  "pool_order": [
+    "validation",
+    "test"
+  ],
+  "role_order": [
+    "A",
+    "B",
+    "C"
+  ],
+  "selection": "Choose the first distinct eligible learner in the first available split ranked by SHA256 of UTF-8 lumiread-demo-v1|role|original_user_id. Never use answers, predictions, recommendations or model error to rank. Keep the complete mapped history, ordered by the original numeric order_id.",
+  "roles": {
+    "A": {
+      "label": "初次观察",
+      "min_attempts": 3,
+      "max_attempts": 5
+    },
+    "B": {
+      "label": "专项练习",
+      "min_attempts": 12,
+      "max_attempts": 45,
+      "min_dominant_count": 12,
+      "min_dominant_share": 0.7
+    },
+    "C": {
+      "label": "综合观察",
+      "min_attempts": 40,
+      "min_distinct_skills": 4
+    }
+  },
+  "if_no_match": "Fail explicitly. No threshold relaxation or synthetic replacement.",
+  "source": "ASSISTments 2009–2010 corrected Skill Builder",
+  "archive_sha256": "10c4fa76ae9410d8577cf9604cf21f8eed029552717a4b281d64945cf44ebe46"
+}

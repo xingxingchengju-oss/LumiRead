@@ -1,0 +1,146 @@
+.clouclip {
+  padding: clamp(1rem, 3vw, 1.8rem);
+  color: #26382a;
+}
+.clouclip-head,
+.clouclip-metric header,
+.clouclip-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+.clouclip-head p,
+.clouclip-source-note,
+.clouclip-events p,
+.clouclip small,
+.clouclip-timeline {
+  color: #4c604f;
+}
+.clouclip-head p {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+.clouclip-head h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.6rem;
+}
+.clouclip-status {
+  flex-shrink: 0;
+  background: #ebf1e4;
+  border-radius: 2rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+.clouclip-source-note {
+  margin: 0.85rem 0 1.1rem;
+  line-height: 1.7;
+}
+.clouclip-controls {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.clouclip-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.clouclip select {
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #82957d;
+  border-radius: 0.5rem;
+  padding: 0.48rem 0.35rem;
+}
+.clouclip-timeline {
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.clouclip-timeline strong {
+  font-size: 1rem;
+}
+.clouclip-timeline progress {
+  appearance: auto;
+  accent-color: #496447;
+  grid-column: 1/-1;
+  width: 100%;
+  height: 0.55rem;
+}
+.clouclip-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr));
+  gap: 0.7rem;
+}
+.clouclip-metric {
+  background: #f8faf4;
+  border: 1px solid #d3ddcb;
+  border-radius: 12px;
+  padding: 0.8rem 0.65rem;
+  min-width: 0;
+}
+.clouclip-metric h4,
+.clouclip-events h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.clouclip-reading {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  font-size: 1.7rem;
+  color: #263f26;
+}
+.clouclip-reading small {
+  font-size: 0.85rem;
+}
+.clouclip-limits {
+  font-size: 0.75rem;
+}
+.clouclip-events {
+  margin: 1rem 0;
+}
+.clouclip-events ul {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+}
+.clouclip-events li {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-left: 3px solid #b37735;
+  background: #fff4df;
+}
+.clouclip-events p {
+  margin: 0.45rem 0;
+}
+.clouclip details {
+  padding: 0.65rem 0;
+  border-top: 1px solid #d7decf;
+}
+.clouclip summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.clouclip table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  font-variant-numeric: tabular-nums;
+}
+.clouclip caption {
+  text-align: left;
+  padding: 0.65rem 0;
+}
+.clouclip th,
+.clouclip td {
+  padding: 0.35rem 0.15rem;
+  border-bottom: 1px solid #d7decf;
+  text-align: left;
+}

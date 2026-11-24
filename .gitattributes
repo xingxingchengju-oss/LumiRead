@@ -1,0 +1,6 @@
+# Preserve the original bytes of files used by the checksum verifiers.
+artifacts/** -text
+data/dkt/*.json -text
+data/clouclip/*.csv -text
+data/vision/original/** -text
+ml/vision/legacy/assets/** -text

@@ -1,0 +1,12 @@
+{
+  "n": 30,
+  "min_s": 0.22032403945922852,
+  "median_s": 0.24401438236236572,
+  "p95_s": 0.25966525077819824,
+  "max_s": 0.2618980407714844,
+  "input": "Simulated timer via the Mac LAN HTTPS interface, paired camera client on the same Mac",
+  "parent": "Visible DOM acknowledged via the parent route in a separate Chromium context",
+  "includes_physical_radio_link": false,
+  "stage": "server insertion through parent receipt",
+  "pass": true
+}

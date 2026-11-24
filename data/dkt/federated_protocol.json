@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "registered_at_utc": "2026-11-23T08:14:11.425360+00:00",
+  "simulation": "single-host sequential simulation of cross-device federated learning",
+  "client_unit": "one entire, disjoint training learner per simulated client",
+  "seeds": [
+    6083,
+    16083,
+    26083
+  ],
+  "rounds": 60,
+  "clients_per_round": 64,
+  "local_epochs": 3,
+  "local_optimizer": "SGD",
+  "learning_rate": 0.3,
+  "momentum": 0,
+  "gradient_clip": 5.0,
+  "client_selection": "For each run, NumPy default_rng(seed) samples 64 training learners uniformly without replacement in each round. The stored train split order defines client indices.",
+  "initialization": "Each seed initializes an independent PyTorch DKT (same architecture as central) from scratch; no central checkpoint initialization.",
+  "weighting": "Each participating client's model weight is its number of valid next-answer targets divided by the sum of participating valid targets. Include the BOS prediction, exclude padding, count each target once irrespective of local epochs.",
+  "selection": "For each seed choose highest validation ROC AUC, ties choose earliest round. Among three winners choose highest validation ROC AUC, ties choose lowest numeric seed. Test predictions are computed after all choices are frozen.",
+  "local_loss": "Unweighted mean binary cross-entropy over that learner's full chronological sequence per local epoch. Report round training loss averaged over all local target exposures.",
+  "architecture": {
+    "embedding": 12,
+    "hidden": 24,
+    "layers": 1,
+    "outputs": 6
+  },
+  "short_history_max_prior": 4,
+  "history_bins": {
+    "zero": [
+      0,
+      0
+    ],
+    "one_to_four": [
+      1,
+      4
+    ],
+    "five_to_nineteen": [
+      5,
+      19
+    ],
+    "twenty_plus": [
+      20,
+      null
+    ]
+  },
+  "threshold": 0.5,
+  "positive_class": 1,
+  "confusion_axes": "rows actual 0/1, columns predicted 0/1",
+  "seed_summary": "Report all three validation-selected runs on the same test learners, and their arithmetic mean and sample standard deviation. Never use test values to choose the default.",
+  "data_summary_sha256": "eeaa9c3768867cbbdc4a4389299d640c6d0d7d3f206b10a8c0c6fab2f37e1cb3",
+  "frozen_central_manifest_sha256": "561797db938df9f1658e2459ed9452c4895d3e3c4e172f044fb2e338b53b08d0",
+  "dataset_archive_sha256": "10c4fa76ae9410d8577cf9604cf21f8eed029552717a4b281d64945cf44ebe46"
+}

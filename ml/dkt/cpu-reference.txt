@@ -1,0 +1,6 @@
+# Direct package versions of the verified macOS arm64 CPU evaluation environment.
+torch==2.13.0
+numpy==2.4.6
+lightgbm==4.6.0
+scikit-learn==1.9.0
+matplotlib==3.11.1

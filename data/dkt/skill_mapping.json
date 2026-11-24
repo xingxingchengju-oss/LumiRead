@@ -1,0 +1,32 @@
+{
+  "mixed_arithmetic": {
+    "display": "四则混合运算",
+    "labels": ["Order of Operations All", "Order of Operations +,-,/,* () positive reals"],
+    "basis": "Both source tags explicitly assess precedence in multi-operation expressions."
+  },
+  "fractions": {
+    "display": "分数通分约分",
+    "labels": ["Equivalent Fractions", "Addition and Subtraction Fractions"],
+    "basis": "Rewriting equivalent fractions and finding a common denominator belong to this skill family. The source does not distinguish same-denominator items or isolate reduction."
+  },
+  "decimals": {
+    "display": "小数乘除",
+    "labels": ["Multiplication and Division Positive Decimals"],
+    "basis": "The original tag names both operations on positive decimal operands."
+  },
+  "equations": {
+    "display": "简易方程",
+    "labels": ["Equation Solving Two or Fewer Steps"],
+    "basis": "One- and two-step equation solving directly matches the intended scope."
+  },
+  "area": {
+    "display": "几何面积",
+    "labels": ["Area Rectangle", "Area Triangle", "Area Trapezoid", "Area Circle", "Area Parallelogram", "Area Irregular Figure"],
+    "basis": "All six tags concern planar area. Volume and surface-area problems are outside this grouping."
+  },
+  "word_modeling": {
+    "display": "应用题列式",
+    "labels": ["Write Linear Equation from Situation"],
+    "basis": "The source tag explicitly requires converting a situation to a linear equation. This covers a narrower family than all story problems."
+  }
+}

@@ -1,0 +1,106 @@
+.glass-demo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.glass-camera .check {
+  text-align: left;
+}
+.glass-camera .viewfinder {
+  margin-bottom: 0.9rem;
+  position: relative;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.glass-touch-rail {
+  position: absolute;
+  top: 5%;
+  bottom: 5%;
+  width: clamp(48px, 17%, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 2px solid #f4f3d9;
+  border-radius: 0.8rem;
+  background: #18382ace;
+  color: white;
+  box-shadow: 0 1px 4px #17271f80;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.glass-touch-rail[data-tap-side="left"] {
+  left: 1.5%;
+}
+.glass-touch-rail[data-tap-side="right"] {
+  right: 1.5%;
+}
+.glass-touch-rail strong {
+  font-size: 1.1rem;
+}
+.glass-touch-rail:active {
+  background: #42694be6;
+}
+.glass-rail-hint {
+  margin: 0 0 0.35rem;
+  color: #374e3c;
+}
+.glass-observations {
+  border-top: 2px solid #425d48;
+  padding-top: 1.2rem;
+  margin-top: 1.7rem;
+  text-align: left;
+}
+.glass-observations h2 {
+  margin-top: 0;
+}
+.glass-grid {
+  margin: 0.75rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 0.65rem;
+}
+.glass-grid div {
+  background: #fffdf6;
+  border: 1px solid #c9d0bc;
+  border-radius: 9px;
+  padding: 0.7rem 0.9rem;
+}
+.glass-grid dt,
+.glass-note,
+.glass-grid small {
+  color: #485947;
+}
+.glass-grid dd {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.glass-alert {
+  padding: 0.75rem 1.5rem;
+  background: #fbefcf;
+  color: #54360b;
+  border-left: 4px solid #906822;
+}
+.glass-marker-guide {
+  padding: 0.65rem 0;
+  border-block: 1px solid #c9d0bc;
+  margin-bottom: 0.8rem;
+}
+.glass-marker-guide summary {
+  padding: 0.35rem 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+.glass-marker-guide p {
+  margin: 0.5rem 0;
+}
+.glass-demo {
+  margin-top: 0.8rem;
+  color: #58421c;
+}

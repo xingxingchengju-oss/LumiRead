@@ -1,0 +1,124 @@
+{
+  "archive_url": "https://base.ustc.edu.cn/data/ASSISTment/2009_skill_builder_data_corrected.zip",
+  "archive_sha256": "10c4fa76ae9410d8577cf9604cf21f8eed029552717a4b281d64945cf44ebe46",
+  "member": "skill_builder_data_corrected.csv",
+  "mapping_sha256": "425f15760a5da79b0139a54584e7d53f2beb7d056b75bffb29075c1bd2606539",
+  "split_seed": 6083,
+  "counts": {
+    "raw_tag_rows": 401756,
+    "eligible_mapped_tag_rows": 44212
+  },
+  "source_tag_rows": {
+    "Addition and Subtraction Fractions": 11334,
+    "Area Circle": 1144,
+    "Area Irregular Figure": 750,
+    "Area Parallelogram": 115,
+    "Area Rectangle": 483,
+    "Area Trapezoid": 913,
+    "Area Triangle": 286,
+    "Equation Solving Two or Fewer Steps": 17311,
+    "Equivalent Fractions": 2942,
+    "Multiplication and Division Positive Decimals": 1970,
+    "Order of Operations +,-,/,* () positive reals": 2339,
+    "Order of Operations All": 3338,
+    "Write Linear Equation from Situation": 1287
+  },
+  "splits": {
+    "train": {
+      "students": 1653,
+      "events": 30668,
+      "correct": 20018,
+      "sequence_sha256": "ace6510294e022372903ecd418c901c2e628a3cb5fa0bf5e660e76541495a0c7",
+      "counts": {
+        "mixed_arithmetic": {
+          "attempts": 4016,
+          "correct": 2502
+        },
+        "fractions": {
+          "attempts": 9926,
+          "correct": 6284
+        },
+        "decimals": {
+          "attempts": 1326,
+          "correct": 1022
+        },
+        "equations": {
+          "attempts": 12132,
+          "correct": 7851
+        },
+        "area": {
+          "attempts": 2409,
+          "correct": 1626
+        },
+        "word_modeling": {
+          "attempts": 859,
+          "correct": 733
+        }
+      }
+    },
+    "validation": {
+      "students": 354,
+      "events": 6850,
+      "correct": 4559,
+      "sequence_sha256": "865a55930970a22df6ead0fa19b57818f82f64e567fa13e357100fcebecd25d7",
+      "counts": {
+        "mixed_arithmetic": {
+          "attempts": 879,
+          "correct": 556
+        },
+        "fractions": {
+          "attempts": 2087,
+          "correct": 1415
+        },
+        "decimals": {
+          "attempts": 293,
+          "correct": 233
+        },
+        "equations": {
+          "attempts": 2715,
+          "correct": 1709
+        },
+        "area": {
+          "attempts": 666,
+          "correct": 453
+        },
+        "word_modeling": {
+          "attempts": 210,
+          "correct": 193
+        }
+      }
+    },
+    "test": {
+      "students": 355,
+      "events": 6694,
+      "correct": 4468,
+      "sequence_sha256": "186ce5eadb831350f40da3b2b2c7e5da97c839af0f45a8c7a3bd4b55b81703db",
+      "counts": {
+        "mixed_arithmetic": {
+          "attempts": 782,
+          "correct": 499
+        },
+        "fractions": {
+          "attempts": 2263,
+          "correct": 1481
+        },
+        "decimals": {
+          "attempts": 351,
+          "correct": 272
+        },
+        "equations": {
+          "attempts": 2464,
+          "correct": 1623
+        },
+        "area": {
+          "attempts": 616,
+          "correct": 407
+        },
+        "word_modeling": {
+          "attempts": 218,
+          "correct": 186
+        }
+      }
+    }
+  }
+}

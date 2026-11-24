@@ -1,0 +1,10 @@
+{
+  "cpu_weights.json": "f37430dcacc7cd8ce81bda0d455fc1d84b03eec08e0a792259e5eccb085823dc",
+  "parity.json": "7cdc9ba47ca895b30794ed40e77ccd9d722cfe2fd826d78e60a1a99cfe1c25c8",
+  "protocol.json": "03b5101728246b075bbc2cbbf2a453d23b857efaad60e97707e18fd900f5a06f",
+  "report.json": "66dd240234b4f5b522c45d3404d93125a7dbcae4d65b22d2bb7c679591aa0425",
+  "rounds.jsonl": "5b42d072c1f69bb3bc7300bd7c432e29cdd837995814d7ea099407b2e814fc9f",
+  "seed-16083.pt": "c22ef411d3da39a061238d7302d53d47e67362f432e98e736e7c2b0ba34289ad",
+  "seed-26083.pt": "c7d39ba2eadccb58eb4cabbbc1a963bb58c3af220934eb6da2dfa2ecc3ea25d0",
+  "seed-6083.pt": "de178d1ac48f6be4a4ed352ff8b123c78dded5b84a822c88a00cb23446d6e08b"
+}

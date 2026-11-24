@@ -1,0 +1,23 @@
+{
+  "input": "ordinary worksheet upload",
+  "reference_sources": [
+    "precomputed arithmetic answer key"
+  ],
+  "pages": 24,
+  "labelled": 120,
+  "skills": {
+    "mixed_arithmetic": 20,
+    "fractions": 20,
+    "decimals": 20,
+    "equations": 20,
+    "area": 20,
+    "word_modeling": 20
+  },
+  "automatic": 120,
+  "agreed": 119,
+  "unmatched_predictions": 0,
+  "agreement": 0.9916666666666667,
+  "coverage": 1.0,
+  "labels_sha256": "d08060a9ede911d9f629d0aed54bf7a4202e5f84d59b873c632f7988a25be2f9",
+  "passed": true
+}

@@ -1,0 +1,9 @@
+{
+  "cpu_weights.json": "f596e77e7b94ab3ca4687447c0ee2f20c7efec34440809c93f92d7c3ee73e0f4",
+  "dkt.pt": "145927c8500a5be69c6e7371ee05a51fe2c3dbd181d46b2a32a2facc4b074179",
+  "lightgbm.txt": "3e6c25da18b164553d485c3dd53eab65498b6de172376b4429f9fbeae07f9e4f",
+  "parity.json": "5429b2a3feaa46269d75e08f52d980789dc8cbb722793dabeb6ce793004b93ea",
+  "metrics.json": "de55e36c2372a6baeacdc3df0eceb019166991a6cef3c9b642ac6ca184253e05",
+  "training.json": "2b36b97f08d47db06b987f4d101119f40386cd0ad34b938622ef04c9a8099b7a",
+  "curves.png": "590d11f5ffe467c45397b5c58c7115ab92f1d1b9813ba373d8b4169aa889f011"
+}
