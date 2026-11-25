@@ -1,0 +1,8 @@
+# Tested with Python 3.11 on macOS arm64, CPU inference.
+numpy==2.4.6
+torch==2.13.0
+einops==0.8.1
+scikit-learn==1.9.0
+scipy==1.17.1
+joblib==1.6.0
+threadpoolctl==3.8.0

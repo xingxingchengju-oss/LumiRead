@@ -11,7 +11,7 @@ COMMIT = "6aaca1616e2a6e852d766bd514560d15094ac9c8"
 SHA = "6c99f656ca6a7517b809b06226f2be9739c2e8d63f85cc8b755cff506aa6bbe3"
 REPO = "https://github.com/tscnlab/ZaunerEtAl_JVis_2026"
 RANGES = {
-    "stable": ("稳定阅读", 57565, 57578),
+    "stable": ("距离与照度稳定", 57565, 57578),
     "near": ("持续偏近及恢复", 56348, 56358),
     "dim": ("持续偏暗及恢复", 56768, 56777),
 }

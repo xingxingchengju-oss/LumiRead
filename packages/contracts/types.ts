@@ -140,6 +140,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eye-care/clock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clock */
+        post: operations["clock_api_v1_eye_care_clock_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eye-care/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Research View */
+        get: operations["research_view_api_v1_eye_care_research_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eye-care/preview/{recording}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview */
+        get: operations["preview_api_v1_eye_care_preview__recording__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eye-care/excerpts/{segment}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Excerpt */
+        get: operations["excerpt_api_v1_eye_care_excerpts__segment__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eye-care/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_api_v1_eye_care_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health/ready": {
         parameters: {
             query?: never;
@@ -701,6 +786,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/eye-care": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Web */
+        get: operations["web_eye_care_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -821,20 +923,116 @@ export interface components {
             /** Assistant Path */
             assistant_path: string;
         };
+        /** Clock */
+        Clock: {
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "writing" | "electronic" | "other";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "manual" | "rule_demo" | "RitW" | "simulated";
+            /**
+             * Start Second
+             * @default 0
+             */
+            start_second: number;
+            /** Spans */
+            spans: components["schemas"]["Span"][];
+        };
+        /** ClockEvent */
+        ClockEvent: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rest_due" | "rest_completed";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "manual" | "rule_demo" | "RitW" | "simulated";
+            /** Source Second */
+            source_second: number;
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "writing" | "electronic" | "other";
+            /**
+             * Scene Source
+             * @enum {string}
+             */
+            scene_source: "model" | "manual_scenario" | "simulated";
+            /** Rule Version */
+            rule_version: string;
+        };
+        /** ClockResult */
+        ClockResult: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "manual" | "rule_demo" | "RitW" | "simulated";
+            /** Rule Version */
+            rule_version: string;
+            /** Active Seconds */
+            active_seconds: number;
+            /** Bout Seconds */
+            bout_seconds: number;
+            /** Missing Seconds */
+            missing_seconds: number;
+            /** Break Seconds */
+            break_seconds: number;
+            /** Threshold Seconds */
+            threshold_seconds: number;
+            /** Events */
+            events: components["schemas"]["ClockEvent"][];
+        };
         /** Control */
         Control: {
             /**
              * Action
              * @enum {string}
              */
-            action: "play" | "pause" | "replay" | "speed";
+            action: "play" | "pause" | "replay" | "speed" | "scene";
             /** Speed */
             speed?: (1 | 4 | 10) | null;
+            /** Scene */
+            scene?: ("paper" | "phone" | "computer") | null;
             /** Generation */
             generation: number;
         };
         /** CreateSession */
         CreateSession: Record<string, never>;
+        /** DayTotals */
+        DayTotals: {
+            /** Coverage Seconds */
+            coverage_seconds: number;
+            /** Distance Seconds */
+            distance_seconds: number;
+            /** Light Seconds */
+            light_seconds: number;
+            /** Reading Seconds */
+            reading_seconds: number;
+            /** Medium Seconds */
+            medium_seconds: {
+                [key: string]: number;
+            };
+            /** Near */
+            near: number;
+            /** Dim */
+            dim: number;
+            /** Breaks */
+            breaks: number;
+            /** Date */
+            date: string;
+            /** Recorded */
+            recorded: boolean;
+        };
         /** Episode */
         Episode: {
             /**
@@ -850,6 +1048,27 @@ export interface components {
             end_line?: number | null;
             /** Ended At */
             ended_at?: string | null;
+            /**
+             * Source
+             * @default Clouclip
+             */
+            source: string;
+            /**
+             * Scene
+             * @default paper
+             * @enum {string}
+             */
+            scene: "paper" | "phone" | "computer";
+            /**
+             * Scene Source
+             * @default manual_scenario
+             */
+            scene_source: string;
+            /**
+             * Rule Version
+             * @default clouclip-duration-v2
+             */
+            rule_version: string;
         };
         /** Event */
         Event: {
@@ -914,6 +1133,31 @@ export interface components {
         Exercises: {
             /** Items */
             items: components["schemas"]["Exercise"][];
+        };
+        /** EyeReport */
+        EyeReport: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "ritw" | "clouclip" | "simulated";
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "phone" | "computer";
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Week */
+            week: components["schemas"]["DayTotals"][];
+            totals: components["schemas"]["ReportTotals"];
+            /** Recorded Days */
+            recorded_days: string[];
+            /** Details */
+            details: (components["schemas"]["ReadingDetail"] | components["schemas"]["SimulatedDetail"] | components["schemas"]["Episode"])[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1071,6 +1315,44 @@ export interface components {
             /** Items */
             items: components["schemas"]["Mistake"][];
         };
+        /** ModelScore */
+        ModelScore: {
+            /** Read F1 */
+            read_f1: number;
+            /** Read Precision */
+            read_precision: number;
+            /** Read Recall */
+            read_recall: number;
+            /** Medium Recall */
+            medium_recall: {
+                [key: string]: number;
+            };
+            /** Medium Support */
+            medium_support: {
+                [key: string]: number;
+            };
+            /** Duration Mae Seconds */
+            duration_mae_seconds: number;
+            /** Hard Negative Windows */
+            hard_negative_windows: number;
+            /** Hard False Positive Windows */
+            hard_false_positive_windows: number;
+            /** Hard False Positive Rate */
+            hard_false_positive_rate: number;
+        };
+        /** PanelMetrics */
+        PanelMetrics: {
+            /** Revision */
+            revision: string;
+            /** Splits */
+            splits: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            official: components["schemas"]["ModelScore"];
+            logistic: components["schemas"]["ModelScore"];
+        };
         /** PhoneSetup */
         PhoneSetup: {
             /**
@@ -1111,6 +1393,13 @@ export interface components {
             records: components["schemas"]["Record"][];
             /** Events */
             events: components["schemas"]["Episode"][];
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "phone" | "computer";
+            /** Distance Limit Cm */
+            distance_limit_cm: number;
         };
         /** PracticeAnswer */
         PracticeAnswer: {
@@ -1243,6 +1532,19 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ReadingDetail */
+        ReadingDetail: {
+            /** Id */
+            id: string;
+            /** Covered Seconds */
+            covered_seconds: number;
+            /** Predicted Read Seconds */
+            predicted_read_seconds: number;
+            /** Reference Read Seconds */
+            reference_read_seconds: number;
+            /** Events */
+            events: components["schemas"]["ClockEvent"][];
+        };
         /**
          * RearCameraSample
          * @description Live submissions from the wearer camera; historical samples remain readable.
@@ -1311,6 +1613,37 @@ export interface components {
             /** Offset Seconds */
             offset_seconds: number;
         };
+        /** ReportTotals */
+        ReportTotals: {
+            /** Coverage Seconds */
+            coverage_seconds: number;
+            /** Distance Seconds */
+            distance_seconds: number;
+            /** Light Seconds */
+            light_seconds: number;
+            /** Reading Seconds */
+            reading_seconds: number;
+            /** Medium Seconds */
+            medium_seconds: {
+                [key: string]: number;
+            };
+            /** Near */
+            near: number;
+            /** Dim */
+            dim: number;
+            /** Breaks */
+            breaks: number;
+        };
+        /** Research */
+        Research: {
+            /** Showcase */
+            showcase: string;
+            /** Classes */
+            classes: string[];
+            /** Clips */
+            clips: components["schemas"]["ScoredClip"][];
+            metrics: components["schemas"]["PanelMetrics"];
+        };
         /** Reset */
         Reset: {
             /** Session Id */
@@ -1366,6 +1699,66 @@ export interface components {
             /** Samples */
             samples: components["schemas"]["Sample"][];
         };
+        /** ScoredClip */
+        ScoredClip: {
+            /** Id */
+            id: string;
+            /** Date */
+            date: string;
+            /** Group */
+            group: string;
+            /** Evaluation */
+            evaluation: [
+                number,
+                number
+            ];
+            /** Reference Intervals */
+            reference_intervals: [
+                number,
+                number
+            ][];
+            /** Reference Medium */
+            reference_medium: number;
+            /** Covered Seconds */
+            covered_seconds: number;
+            /** Predicted Read Seconds */
+            predicted_read_seconds: number;
+            /** Reference Read Seconds */
+            reference_read_seconds: number;
+            /** Intervals */
+            intervals: [
+                number,
+                number,
+                number,
+                number
+            ][];
+            /** Baseline Intervals */
+            baseline_intervals: [
+                number,
+                number,
+                number,
+                number
+            ][];
+            clock: components["schemas"]["ClockResult"];
+        };
+        /** SensorExcerpt */
+        SensorExcerpt: {
+            segment: components["schemas"]["Excerpt"];
+            /** Records */
+            records: components["schemas"]["Record"][];
+            /** Events */
+            events: components["schemas"]["Episode"][];
+            source: components["schemas"]["Source"];
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "phone" | "computer";
+            /** Distance Limit Cm */
+            distance_limit_cm: number;
+            /** Rule Version */
+            rule_version: string;
+        };
         /** Session */
         Session: {
             /** Session Id */
@@ -1375,6 +1768,49 @@ export interface components {
              * @enum {string}
              */
             role: "parent" | "glasses";
+        };
+        /** SimulatedClockEvent */
+        SimulatedClockEvent: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rest_due" | "rest_completed";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "manual" | "rule_demo" | "RitW" | "simulated";
+            /** Source Second */
+            source_second: number;
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "writing" | "electronic" | "other";
+            /**
+             * Scene Source
+             * @enum {string}
+             */
+            scene_source: "model" | "manual_scenario" | "simulated";
+            /** Rule Version */
+            rule_version: string;
+            /** Started At */
+            started_at: string;
+        };
+        /** SimulatedDetail */
+        SimulatedDetail: {
+            /** Start */
+            start: string;
+            /**
+             * Scene
+             * @enum {string}
+             */
+            scene: "paper" | "phone" | "computer";
+            /** Active Seconds */
+            active_seconds: number;
+            /** Events */
+            events: (components["schemas"]["SimulatedClockEvent"] | components["schemas"]["Episode"])[];
         };
         /** SkillPrediction */
         SkillPrediction: {
@@ -1420,6 +1856,20 @@ export interface components {
             article: string;
             /** Timezone */
             timezone: string;
+        };
+        /** Span */
+        Span: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "active" | "away" | "rest" | "unknown" | "end";
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Scene */
+            scene?: ("paper" | "writing" | "electronic" | "other") | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1640,6 +2090,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Playback"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clock_api_v1_eye_care_clock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Clock"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClockResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    research_view_api_v1_eye_care_research_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Research"];
+                };
+            };
+        };
+    };
+    preview_api_v1_eye_care_preview__recording__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recording: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    excerpt_api_v1_eye_care_excerpts__segment__get: {
+        parameters: {
+            query?: {
+                scene?: "paper" | "phone" | "computer";
+            };
+            header?: never;
+            path: {
+                segment: "stable" | "near" | "dim";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SensorExcerpt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_api_v1_eye_care_report_get: {
+        parameters: {
+            query: {
+                source: "ritw" | "clouclip" | "simulated";
+                day?: string | null;
+                scene?: "paper" | "phone" | "computer";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EyeReport"];
                 };
             };
             /** @description Validation Error */
@@ -2598,6 +3198,26 @@ export interface operations {
         };
     };
     web_showcase_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    web_eye_care_get: {
         parameters: {
             query?: never;
             header?: never;

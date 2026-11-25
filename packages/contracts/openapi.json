@@ -238,6 +238,247 @@
         }
       }
     },
+    "/api/v1/eye-care/clock": {
+      "post": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Clock",
+        "operationId": "clock_api_v1_eye_care_clock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Clock"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eye-care/research": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Research View",
+        "operationId": "research_view_api_v1_eye_care_research_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Research"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eye-care/preview/{recording}": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Preview",
+        "operationId": "preview_api_v1_eye_care_preview__recording__get",
+        "parameters": [
+          {
+            "name": "recording",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Recording"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "video/mp4": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eye-care/excerpts/{segment}": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Excerpt",
+        "operationId": "excerpt_api_v1_eye_care_excerpts__segment__get",
+        "parameters": [
+          {
+            "name": "segment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "stable",
+                "near",
+                "dim"
+              ],
+              "type": "string",
+              "title": "Segment"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "paper",
+                "phone",
+                "computer"
+              ],
+              "type": "string",
+              "default": "paper",
+              "title": "Scene"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SensorExcerpt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eye-care/report": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Report",
+        "operationId": "report_api_v1_eye_care_report_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "ritw",
+                "clouclip",
+                "simulated"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Day"
+            }
+          },
+          {
+            "name": "scene",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "paper",
+                "phone",
+                "computer"
+              ],
+              "type": "string",
+              "default": "paper",
+              "title": "Scene"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EyeReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health/ready": {
       "get": {
         "summary": "Ready",
@@ -1465,6 +1706,22 @@
           }
         }
       }
+    },
+    "/eye-care": {
+      "get": {
+        "summary": "Web",
+        "operationId": "web_eye_care_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1791,6 +2048,167 @@
         ],
         "title": "Catalog"
       },
+      "Clock": {
+        "properties": {
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "writing",
+              "electronic",
+              "other"
+            ],
+            "title": "Scene"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "rule_demo",
+              "RitW",
+              "simulated"
+            ],
+            "title": "Source"
+          },
+          "start_second": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Start Second",
+            "default": 0
+          },
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/Span"
+            },
+            "type": "array",
+            "maxItems": 10000,
+            "title": "Spans"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scene",
+          "source",
+          "spans"
+        ],
+        "title": "Clock"
+      },
+      "ClockEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rest_due",
+              "rest_completed"
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "rule_demo",
+              "RitW",
+              "simulated"
+            ],
+            "title": "Source"
+          },
+          "source_second": {
+            "type": "number",
+            "title": "Source Second"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "writing",
+              "electronic",
+              "other"
+            ],
+            "title": "Scene"
+          },
+          "scene_source": {
+            "type": "string",
+            "enum": [
+              "model",
+              "manual_scenario",
+              "simulated"
+            ],
+            "title": "Scene Source"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "source",
+          "source_second",
+          "scene",
+          "scene_source",
+          "rule_version"
+        ],
+        "title": "ClockEvent"
+      },
+      "ClockResult": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "rule_demo",
+              "RitW",
+              "simulated"
+            ],
+            "title": "Source"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "active_seconds": {
+            "type": "number",
+            "title": "Active Seconds"
+          },
+          "bout_seconds": {
+            "type": "number",
+            "title": "Bout Seconds"
+          },
+          "missing_seconds": {
+            "type": "number",
+            "title": "Missing Seconds"
+          },
+          "break_seconds": {
+            "type": "number",
+            "title": "Break Seconds"
+          },
+          "threshold_seconds": {
+            "type": "integer",
+            "title": "Threshold Seconds"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ClockEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "rule_version",
+          "active_seconds",
+          "bout_seconds",
+          "missing_seconds",
+          "break_seconds",
+          "threshold_seconds",
+          "events"
+        ],
+        "title": "ClockResult"
+      },
       "Control": {
         "properties": {
           "action": {
@@ -1799,7 +2217,8 @@
               "play",
               "pause",
               "replay",
-              "speed"
+              "speed",
+              "scene"
             ],
             "title": "Action"
           },
@@ -1819,6 +2238,22 @@
             ],
             "title": "Speed"
           },
+          "scene": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "paper",
+                  "phone",
+                  "computer"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene"
+          },
           "generation": {
             "type": "integer",
             "minimum": 0.0,
@@ -1836,6 +2271,67 @@
         "properties": {},
         "type": "object",
         "title": "CreateSession"
+      },
+      "DayTotals": {
+        "properties": {
+          "coverage_seconds": {
+            "type": "integer",
+            "title": "Coverage Seconds"
+          },
+          "distance_seconds": {
+            "type": "integer",
+            "title": "Distance Seconds"
+          },
+          "light_seconds": {
+            "type": "integer",
+            "title": "Light Seconds"
+          },
+          "reading_seconds": {
+            "type": "integer",
+            "title": "Reading Seconds"
+          },
+          "medium_seconds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Medium Seconds"
+          },
+          "near": {
+            "type": "integer",
+            "title": "Near"
+          },
+          "dim": {
+            "type": "integer",
+            "title": "Dim"
+          },
+          "breaks": {
+            "type": "integer",
+            "title": "Breaks"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "recorded": {
+            "type": "boolean",
+            "title": "Recorded"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coverage_seconds",
+          "distance_seconds",
+          "light_seconds",
+          "reading_seconds",
+          "medium_seconds",
+          "near",
+          "dim",
+          "breaks",
+          "date",
+          "recorded"
+        ],
+        "title": "DayTotals"
       },
       "Episode": {
         "properties": {
@@ -1876,6 +2372,31 @@
               }
             ],
             "title": "Ended At"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": "Clouclip"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "phone",
+              "computer"
+            ],
+            "title": "Scene",
+            "default": "paper"
+          },
+          "scene_source": {
+            "type": "string",
+            "title": "Scene Source",
+            "default": "manual_scenario"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version",
+            "default": "clouclip-duration-v2"
           }
         },
         "type": "object",
@@ -2045,6 +2566,78 @@
           "items"
         ],
         "title": "Exercises"
+      },
+      "EyeReport": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "ritw",
+              "clouclip",
+              "simulated"
+            ],
+            "title": "Source"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "phone",
+              "computer"
+            ],
+            "title": "Scene"
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "week": {
+            "items": {
+              "$ref": "#/components/schemas/DayTotals"
+            },
+            "type": "array",
+            "title": "Week"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ReportTotals"
+          },
+          "recorded_days": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recorded Days"
+          },
+          "details": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ReadingDetail"
+                },
+                {
+                  "$ref": "#/components/schemas/SimulatedDetail"
+                },
+                {
+                  "$ref": "#/components/schemas/Episode"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "scene",
+          "day",
+          "week",
+          "totals",
+          "recorded_days",
+          "details"
+        ],
+        "title": "EyeReport"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2503,6 +3096,97 @@
         ],
         "title": "Mistakes"
       },
+      "ModelScore": {
+        "properties": {
+          "read_f1": {
+            "type": "number",
+            "title": "Read F1"
+          },
+          "read_precision": {
+            "type": "number",
+            "title": "Read Precision"
+          },
+          "read_recall": {
+            "type": "number",
+            "title": "Read Recall"
+          },
+          "medium_recall": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Medium Recall"
+          },
+          "medium_support": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Medium Support"
+          },
+          "duration_mae_seconds": {
+            "type": "number",
+            "title": "Duration Mae Seconds"
+          },
+          "hard_negative_windows": {
+            "type": "integer",
+            "title": "Hard Negative Windows"
+          },
+          "hard_false_positive_windows": {
+            "type": "integer",
+            "title": "Hard False Positive Windows"
+          },
+          "hard_false_positive_rate": {
+            "type": "number",
+            "title": "Hard False Positive Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "read_f1",
+          "read_precision",
+          "read_recall",
+          "medium_recall",
+          "medium_support",
+          "duration_mae_seconds",
+          "hard_negative_windows",
+          "hard_false_positive_windows",
+          "hard_false_positive_rate"
+        ],
+        "title": "ModelScore"
+      },
+      "PanelMetrics": {
+        "properties": {
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "splits": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Splits"
+          },
+          "official": {
+            "$ref": "#/components/schemas/ModelScore"
+          },
+          "logistic": {
+            "$ref": "#/components/schemas/ModelScore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "revision",
+          "splits",
+          "official",
+          "logistic"
+        ],
+        "title": "PanelMetrics"
+      },
       "PhoneSetup": {
         "properties": {
           "mode": {
@@ -2597,6 +3281,19 @@
             },
             "type": "array",
             "title": "Events"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "phone",
+              "computer"
+            ],
+            "title": "Scene"
+          },
+          "distance_limit_cm": {
+            "type": "integer",
+            "title": "Distance Limit Cm"
           }
         },
         "type": "object",
@@ -2608,7 +3305,9 @@
           "generation",
           "position_seconds",
           "records",
-          "events"
+          "events",
+          "scene",
+          "distance_limit_cm"
         ],
         "title": "Playback"
       },
@@ -2938,6 +3637,42 @@
         ],
         "title": "Readiness"
       },
+      "ReadingDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "covered_seconds": {
+            "type": "integer",
+            "title": "Covered Seconds"
+          },
+          "predicted_read_seconds": {
+            "type": "integer",
+            "title": "Predicted Read Seconds"
+          },
+          "reference_read_seconds": {
+            "type": "number",
+            "title": "Reference Read Seconds"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ClockEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "covered_seconds",
+          "predicted_read_seconds",
+          "reference_read_seconds",
+          "events"
+        ],
+        "title": "ReadingDetail"
+      },
       "RearCameraSample": {
         "properties": {
           "metric": {
@@ -3132,6 +3867,90 @@
         ],
         "title": "Record"
       },
+      "ReportTotals": {
+        "properties": {
+          "coverage_seconds": {
+            "type": "integer",
+            "title": "Coverage Seconds"
+          },
+          "distance_seconds": {
+            "type": "integer",
+            "title": "Distance Seconds"
+          },
+          "light_seconds": {
+            "type": "integer",
+            "title": "Light Seconds"
+          },
+          "reading_seconds": {
+            "type": "integer",
+            "title": "Reading Seconds"
+          },
+          "medium_seconds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Medium Seconds"
+          },
+          "near": {
+            "type": "integer",
+            "title": "Near"
+          },
+          "dim": {
+            "type": "integer",
+            "title": "Dim"
+          },
+          "breaks": {
+            "type": "integer",
+            "title": "Breaks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coverage_seconds",
+          "distance_seconds",
+          "light_seconds",
+          "reading_seconds",
+          "medium_seconds",
+          "near",
+          "dim",
+          "breaks"
+        ],
+        "title": "ReportTotals"
+      },
+      "Research": {
+        "properties": {
+          "showcase": {
+            "type": "string",
+            "title": "Showcase"
+          },
+          "classes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Classes"
+          },
+          "clips": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredClip"
+            },
+            "type": "array",
+            "title": "Clips"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PanelMetrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "showcase",
+          "classes",
+          "clips",
+          "metrics"
+        ],
+        "title": "Research"
+      },
       "Reset": {
         "properties": {
           "session_id": {
@@ -3276,6 +4095,186 @@
         ],
         "title": "Samples"
       },
+      "ScoredClip": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "evaluation": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Evaluation"
+          },
+          "reference_intervals": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Reference Intervals"
+          },
+          "reference_medium": {
+            "type": "integer",
+            "title": "Reference Medium"
+          },
+          "covered_seconds": {
+            "type": "integer",
+            "title": "Covered Seconds"
+          },
+          "predicted_read_seconds": {
+            "type": "integer",
+            "title": "Predicted Read Seconds"
+          },
+          "reference_read_seconds": {
+            "type": "number",
+            "title": "Reference Read Seconds"
+          },
+          "intervals": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array",
+              "maxItems": 4,
+              "minItems": 4
+            },
+            "type": "array",
+            "title": "Intervals"
+          },
+          "baseline_intervals": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array",
+              "maxItems": 4,
+              "minItems": 4
+            },
+            "type": "array",
+            "title": "Baseline Intervals"
+          },
+          "clock": {
+            "$ref": "#/components/schemas/ClockResult"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "group",
+          "evaluation",
+          "reference_intervals",
+          "reference_medium",
+          "covered_seconds",
+          "predicted_read_seconds",
+          "reference_read_seconds",
+          "intervals",
+          "baseline_intervals",
+          "clock"
+        ],
+        "title": "ScoredClip"
+      },
+      "SensorExcerpt": {
+        "properties": {
+          "segment": {
+            "$ref": "#/components/schemas/Excerpt"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Episode"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "phone",
+              "computer"
+            ],
+            "title": "Scene"
+          },
+          "distance_limit_cm": {
+            "type": "integer",
+            "title": "Distance Limit Cm"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "segment",
+          "records",
+          "events",
+          "source",
+          "scene",
+          "distance_limit_cm",
+          "rule_version"
+        ],
+        "title": "SensorExcerpt"
+      },
       "Session": {
         "properties": {
           "session_id": {
@@ -3297,6 +4296,113 @@
           "role"
         ],
         "title": "Session"
+      },
+      "SimulatedClockEvent": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rest_due",
+              "rest_completed"
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "rule_demo",
+              "RitW",
+              "simulated"
+            ],
+            "title": "Source"
+          },
+          "source_second": {
+            "type": "number",
+            "title": "Source Second"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "writing",
+              "electronic",
+              "other"
+            ],
+            "title": "Scene"
+          },
+          "scene_source": {
+            "type": "string",
+            "enum": [
+              "model",
+              "manual_scenario",
+              "simulated"
+            ],
+            "title": "Scene Source"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "source",
+          "source_second",
+          "scene",
+          "scene_source",
+          "rule_version",
+          "started_at"
+        ],
+        "title": "SimulatedClockEvent"
+      },
+      "SimulatedDetail": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "scene": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "phone",
+              "computer"
+            ],
+            "title": "Scene"
+          },
+          "active_seconds": {
+            "type": "integer",
+            "title": "Active Seconds"
+          },
+          "events": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SimulatedClockEvent"
+                },
+                {
+                  "$ref": "#/components/schemas/Episode"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "scene",
+          "active_seconds",
+          "events"
+        ],
+        "title": "SimulatedDetail"
       },
       "SkillPrediction": {
         "properties": {
@@ -3415,6 +4521,55 @@
           "timezone"
         ],
         "title": "Source"
+      },
+      "Span": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "away",
+              "rest",
+              "unknown",
+              "end"
+            ],
+            "title": "State"
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Start"
+          },
+          "end": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "End"
+          },
+          "scene": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "paper",
+                  "writing",
+                  "electronic",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "start",
+          "end"
+        ],
+        "title": "Span"
       },
       "ValidationError": {
         "properties": {

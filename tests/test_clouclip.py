@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from apps.api import clouclip as cc
-from apps.api import storage
+from apps.api import demo, storage
 from apps.api.main import app
 from scripts.clouclip_data import DIRECTORY, build
 
@@ -38,7 +38,7 @@ def test_exact_pinned_data_and_every_real_prefix():
     expected = {
         "stable": [],
         "near": [("Dis", 56353, 56356)],
-        "dim": [("Lux", 56770, 56776)],
+        "dim": [("Lux", 56774, 56776)],
     }
     for key, (_, samples) in parts.items():
         for j, sample in enumerate(samples, 1):
@@ -74,7 +74,7 @@ def test_thresholds_hysteresis_short_excursion_and_single_episode():
         ]
     )
     out = cc.evaluate(obs)
-    assert edges(out) == [("Dis", 7, 13), ("Lux", 7, 13)]
+    assert edges(out) == [("Dis", 7, 13)]
     assert out[0].started_at == obs[5].Date
     assert obs[5].offset_seconds - obs[3].offset_seconds == 10
     assert out[0].ended_at == obs[-1].Date
@@ -87,16 +87,16 @@ def test_missing_distance_does_not_interrupt_lux_or_claim_recovery(bad):
             (0, 32, 260),
             (5, 32, 260),
             (10, bad, 260),
-            (15, 32, 360),
-            (20, 32, 360),
-            (25, 32, 360),
-            (30, 35, 360),
+            (15, 32, 260),
+            (20, 32, 260),
+            (25, 32, 260),
+            (30, 35, 260),
             (35, bad, 360),
             (40, 35, 360),
             (45, 35, 360),
         ]
     )
-    assert edges(cc.evaluate(r)) == [("Lux", 4, 6), ("Dis", 7, 11)]
+    assert edges(cc.evaluate(r)) == [("Dis", 7, 11), ("Lux", 8, 10)]
     assert r[2].distance_cm is None and r[2].illuminance_lx == 260
 
 
@@ -118,16 +118,73 @@ def test_sleep_gap_and_metric_specific_missing_lux():
             (80, 35, 350),
         ]
     )
-    assert edges(cc.evaluate(r)) == [("Dis", 9, 14), ("Lux", 11, 14)]
+    assert edges(cc.evaluate(r)) == [("Dis", 9, 14)]
     for pair in [(-1, 600), (40, -1)]:
         row = points([(0, *pair)])[0]
         assert row.distance_cm is None and row.illuminance_lx is None
+
+
+@pytest.mark.parametrize("scene,limit", cc.DISTANCES.items())
+def test_elapsed_boundaries_and_two_recovery_samples(scene, limit):
+    samples = points(
+        [(0, limit, 300)]
+        + [(t, limit - 1, 299) for t in (1, 5, 10, 11, 16, 21, 26, 30, 31)]
+        + [
+            (32, limit + 2, 350),
+            (33, limit + 1, 349),
+            (34, limit + 2, 350),
+            (35, limit + 2, 350),
+        ]
+    )
+    assert cc.evaluate(samples[:4], scene) == []
+    assert [e.metric for e in cc.evaluate(samples[:9], scene)] == ["Dis"]
+    events = cc.evaluate(samples, scene)
+    assert [(e.metric, e.started_at, e.ended_at, e.scene) for e in events] == [
+        ("Dis", samples[4].Date, samples[-1].Date, scene),
+        ("Lux", samples[9].Date, samples[-1].Date, scene),
+    ]
+
+
+def test_existing_database_rebuilds_old_dark_events(tmp_path, monkeypatch):
+    monkeypatch.setenv("LUMIREAD_VAR", str(tmp_path))
+    storage.initialize()
+    with storage.transaction(True) as db:
+        db.execute("INSERT INTO learners(id) VALUES('history')")
+        db.execute("INSERT INTO sessions(id,learner,created) VALUES('old','history',0)")
+        cc.bind(db, "old", "dim")
+        db.execute("ALTER TABLE clouclip_playbacks DROP COLUMN scene")
+        db.execute(
+            "UPDATE clouclip_playbacks SET processed=10, status='finished', position=45 WHERE sid='old'"
+        )
+        db.execute(
+            "INSERT INTO clouclip_events(sid,metric,start_line,started_at) VALUES('old','Lux',56770,'2020-11-21 09:45:07')"
+        )
+    cc.initialize()
+    cc.initialize()
+    with storage.transaction(True) as db:
+        saved = cc.state(db, "old", 1000)
+        assert edges(saved.events) == [("Lux", 56774, 56776)]
+        assert saved.scene == "paper" and saved.status == "finished"
+        new = cc.control(
+            db, "old", cc.Control(action="scene", scene="computer", generation=0), 1000
+        )
+        assert (
+            new.scene,
+            new.distance_limit_cm,
+            new.generation,
+            new.records,
+            new.events,
+        ) == ("computer", 50, 1, [], [])
+        stale = cc.control(db, "old", cc.Control(action="play", generation=0), 1000)
+        assert stale == new
 
 
 def test_clock_controls_background_auth_restart_and_account_reset(
     tmp_path, monkeypatch
 ):
     monkeypatch.setenv("LUMIREAD_VAR", str(tmp_path))
+    # The Clouclip authorization and reset flow does not use private student histories.
+    monkeypatch.setattr(demo, "seed", lambda account: ({"learner_hash": account}, []))
     clock = [2000.0]
     monkeypatch.setattr(cc, "time", SimpleNamespace(time=lambda: clock[0]))
     with TestClient(app) as near, TestClient(app) as dim, TestClient(app) as stranger:

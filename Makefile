@@ -126,3 +126,27 @@ rehearse-desktop:
 benchmark-alerts:
 	./scripts/web.sh exec node scripts/alert-benchmark.mjs
 	$(PY) scripts/latency_report.py
+
+RITW_UPSTREAM := .cache/ritw/upstream
+RITW_PY ?= .cache/ritw/venv/bin/python
+RITW_REV = $(shell $(PY) -c "from ml.ritw.sources import REVISION; print(REVISION)")
+.PHONY: ritw-upstream ritw-setup ritw-fetch ritw-preview ritw-evaluate ritw-check rehearse-eyecare
+ritw-upstream:
+	@if test "$$(git -C "$(RITW_UPSTREAM)" rev-parse HEAD 2>/dev/null)" != "$(RITW_REV)"; then \
+		git init -q "$(RITW_UPSTREAM)" && \
+		git -C "$(RITW_UPSTREAM)" fetch --depth=1 https://github.com/facebookresearch/reading_in_the_wild.git "$(RITW_REV)" && \
+		git -C "$(RITW_UPSTREAM)" checkout --detach "$(RITW_REV)"; fi
+ritw-setup: ritw-upstream
+	$(PY) -m venv .cache/ritw/venv
+	$(RITW_PY) -m pip install -r ml/ritw/requirements.txt
+ritw-fetch: ritw-upstream
+	$(PY) -m ml.ritw.fetch "$(MANIFEST)" --workers 8
+ritw-preview:
+	$(PY) -m ml.ritw.fetch "$(MANIFEST)" --preview-only
+ritw-evaluate:
+	$(RITW_PY) -m ml.ritw.evaluate $(if $(OUT),--out "$(OUT)")
+ritw-check:
+	shasum -a 256 -c artifacts/ritw/SHA256SUMS
+	$(PY) -m pytest -q tests/test_eyecare.py tests/test_clouclip.py
+rehearse-eyecare: web
+	./scripts/web.sh exec playwright test e2e/eyecare.spec.ts

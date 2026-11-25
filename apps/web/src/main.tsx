@@ -10,6 +10,7 @@ const Camera = lazy(() =>
   import("./Camera").then((m) => ({ default: m.Camera })),
 );
 const Showcase = lazy(() => import("./showcase/Showcase"));
+const EyeCare = lazy(() => import("./eyecare/EyeCare"));
 const Demo = lazy(() => import("./parent/Demo"));
 const Federated = lazy(() => import("./federated/Federated"));
 
@@ -276,8 +277,12 @@ createRoot(document.getElementById("root")!).render(
         <Demo />
       ) : location.pathname === "/federated" ? (
         <Federated />
-      ) : (
+      ) : location.pathname === "/showcase" ||
+        (location.pathname === "/" &&
+          new URLSearchParams(location.search).has("room")) ? (
         <Showcase />
+      ) : (
+        <EyeCare />
       )}
     </Suspense>
   ),

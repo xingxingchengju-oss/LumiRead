@@ -2,9 +2,7 @@
 
 import json
 import os
-from collections import Counter
 from pathlib import Path
-from statistics import mean, median
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -141,8 +139,9 @@ def table(rows, fractions):
 
 
 vision = read("reports/vision_evaluation.json")
-receipts = read("reports/desktop_vision_receipts.json")["pages"]
-phone = read("reports/iphone_evidence.json")
+ritw = read("artifacts/ritw/metrics.json")
+replays = read("artifacts/ritw/replays.json")
+example = next(r for r in replays["clips"] if r["id"] == replays["showcase"])
 fed = read("artifacts/federated/report.json")
 models = fed["comparison"]
 choices = [
@@ -150,36 +149,137 @@ choices = [
     ("FedAvg DKT", "federated_dkt"),
     ("LightGBM", "lightgbm"),
 ]
-confusion = Counter(
-    (item["expected"], item["observed"])
-    for receipt in receipts
-    for item in receipt["items"]
+start("LumiRead | A family eye-care notebook")
+paragraph(
+    "A low light reading can be brief. A parent needs to know how long it lasted, where the sensor was worn and when the reading recovered. LumiRead replays those observations on an ordinary computer. A separate eye-tracking experiment estimates when reading takes place and which medium the wearer sees."
 )
-if (
-    len(receipts) != vision["pages"]
-    or sum(confusion.values()) != vision["labelled"]
-    or sum(n for (a, b), n in confusion.items() if a == b) != vision["agreed"]
-):
-    raise ValueError(
-        "The screenshot evaluation totals differ from the saved online receipts."
-    )
-desktop_cost = mean(r["estimated_usd"] for r in receipts)
-desktop_latency = median(r["seconds"] for r in receipts)
+picture("apps/web/public/products/frame.webp", 150)
+paragraph(
+    "<i>Figure 1. Integrated frame concept.</i> The product showcase also includes a clip for existing prescription glasses."
+)
+section("The family decision")
+paragraph(
+    "Families with primary-school children could use a daily record to adjust a desk lamp, increase the distance to a screen or plan a break. The prototype detects reading and estimates the medium. It replays distance and light reminders, tracks study time, links advice to events and summarizes daily and weekly records."
+)
+paragraph(
+    "Two independent adult studies supply the measured evidence. The reading model runs on Meta Project Aria recordings. The environmental rules use a Clouclip export. A labelled fictional week shows what a complete family report could look like. Usefulness and health outcomes in children require a separately designed study."
+)
 
-start("LumiRead | Business proposal and machine learning evaluation")
+start("Reading recognition on Meta’s Seattle recordings")
 paragraph(
-    "A child writes 8 for 9 minus 4. What would help a parent more than a red mark? LumiRead shows the original answer, explains the subtraction one step at a time and offers a new problem. The child can continue working on paper. The desktop demonstration follows that decision from the worksheet to the next practice response (LumiRead Project, 2026a, 2026b)."
+    "Reading in the Wild includes purposeful reading, everyday tasks and scenes with visible text that the wearer is not reading. We fixed a panel from Meta’s published Seattle splits. Each split spans print, digital, object text, alternating reading, everyday non-reading and text-present non-reading. Within each group a stable hash ranks whole recordings. Each recording belongs to one split (Yang et al., 2025)."
 )
-picture("apps/web/public/products/frame.webp", 160)
-paragraph(
-    "<i>Figure 1. Integrated frame concept.</i> A clip for existing prescription glasses provides a second proposed form factor. Both can be rotated and inspected in the product showcase (LumiRead Project, 2026a, 2026b)."
+section("Table 1. Valid decisions at one-second intervals")
+table(
+    [["Split", "Recordings", "Covered seconds"]]
+    + [
+        [
+            label,
+            str(ritw["splits"][k]["recordings"]),
+            f"{ritw['splits'][k]['seconds']:,}",
+        ]
+        for k, label in [
+            ("train", "Training"),
+            ("val", "Validation"),
+            ("test", "Held-out test"),
+        ]
+    ],
+    [0.40, 0.26, 0.34],
 )
-section("Customers and distribution")
 paragraph(
-    "The proposed customers are families of children aged 6–12 who already use paper homework. Parents can decide when to respond to study conditions and what to practise after a mistake. An optical-store pilot would reach families choosing a new frame or keeping an existing prescription. It could measure fitting time, comfort, returns and subscription take-up before the team commits to production (LumiRead Project, 2026a)."
+    "We use the preceding two seconds of binocular gaze velocity and six-axis head velocity. We align each channel to device time and reject missing or stale windows. Meta’s frozen binary and four-class transformer checkpoints run on these two signals. The reference video provides a synchronized view for a presenter."
 )
 paragraph(
-    "The working notebook, sensor replay and model comparisons run on an ordinary computer. A new worksheet uses an online grading service. The eyewear remains a design concept. The course evidence measures prediction quality, reminder logic and grading on defined inputs. A longitudinal trial would be needed to measure the effect on learning or vision (LumiRead Project, 2026a, 2026b)."
+    "We independently fitted two class-balanced logistic regressions on the training split. Their 36 inputs summarize the mean, standard deviation, mean absolute and maximum absolute value of nine channels. Validation selected C = 0.1 for both tasks. The final comparison uses identical held-out windows."
+)
+paragraph(
+    "For alternating tasks we use the separately annotated reading intervals. For other tasks we score within the published start and stop annotations. Missing windows appear as gaps. Recording IDs, file digests and all test predictions are available with the public reproduction code."
+)
+
+start("What the held-out predictions support")
+section("Table 2. Detection, duration and false positives")
+table(
+    [["Method", "Reading F1", "Duration MAE", "Hard-negative FPR"]]
+    + [
+        [
+            label,
+            f"{ritw[k]['read_f1']:.3f}",
+            f"{ritw[k]['duration_mae_seconds']:.1f} s",
+            f"{ritw[k]['hard_false_positive_rate']:.1%}",
+        ]
+        for k, label in [
+            ("official", "Meta checkpoints"),
+            ("logistic", "Logistic baselines"),
+        ]
+    ],
+    [0.31, 0.20, 0.22, 0.27],
+)
+paragraph(
+    "F1 measures agreement on reading at the decision instant. Duration MAE is the mean absolute error per recording on the covered time. The hard-negative denominator is 939 seconds of text-present non-reading. Meta produced 142 false reading decisions in this group, compared with 501 for logistic regression."
+)
+section("Table 3. Four-class medium recall")
+table(
+    [["True class", "Test seconds", "Meta", "Logistic"]]
+    + [
+        [
+            name,
+            f"{ritw['official']['medium_support'][name]:,}",
+            f"{ritw['official']['medium_recall'][name]:.1%}",
+            f"{ritw['logistic']['medium_recall'][name]:.1%}",
+        ]
+        for name in replays["classes"]
+    ],
+    [0.32, 0.25, 0.2, 0.23],
+)
+paragraph(
+    "The binary model detects reading more reliably than the medium model distinguishes print, screens and objects. The dashboard exposes uncertain media and keeps phone and computer distance scenarios under user control. These adult results do not establish accuracy for children."
+)
+paragraph(
+    f"In the default alternating test recording, both motion streams cover {example['covered_seconds']} seconds. The reference contains {example['reference_read_seconds']:.1f} seconds of reading in that coverage. The detector identifies {example['predicted_read_seconds']} seconds. The timeline lets a presenter inspect individual disagreements."
+)
+
+start("Distance, lighting and recovery")
+paragraph(
+    "The Clouclip export contains 77,847 working-distance and worn-light readings from one adult graduate student. The export has nominal five-second rows. The device can refresh light more slowly. No task annotation identifies whether the person was reading a book, phone or computer. The presenter chooses a scenario and the server evaluates original timestamps (Zauner et al., 2026)."
+)
+section("Table 4. Reminders on 21 November 2020 in the paper scenario")
+table(
+    [
+        ["Excerpt", "Samples", "Triggered", "Recovered"],
+        ["Stable", "14", "None", "None"],
+        ["Near distance", "11", "09:10:13", "09:10:28"],
+        ["Dim light", "10", "09:45:27", "09:45:37"],
+    ],
+    [0.35, 0.17, 0.24, 0.24],
+)
+paragraph(
+    "Distance below 33 cm for paper, 40 cm for a phone or 50 cm for a computer must persist for ten seconds. Worn light below 300 lux must persist for thirty seconds. Two consecutive valid readings at least 2 cm above the distance limit or at least 350 lux close the respective reminder. A missing reading or gap over five seconds interrupts a pending streak."
+)
+paragraph(
+    "The mobile and computer distances and the average desktop illuminance reference come from WS/T 773–2020. The family guideline also advises about one Chinese foot of reading distance. A worn light sensor can suggest checking the work surface. A desktop lighting assessment requires a measurement on that surface. Persistence and recovery margins are engineering choices."
+)
+paragraph(
+    "The three short replays show the original sample and source-file line at each alert. Changing playback speed changes elapsed classroom time. The recorded trigger and recovery timestamps stay fixed."
+)
+
+start("Study time, advice and the parent report")
+section("When the clock advances")
+paragraph(
+    "A valid reading decision adds one second of activity. The timer can also record a manually started paper, writing or electronic session. It recommends a break at 40 minutes of study or 30 minutes of electronic learning. The 2018 eight-ministry guidance recommends distance viewing for about ten minutes after 30–40 minutes of electronic learning. We chose the early end for the demonstration."
+)
+paragraph(
+    "Brief pauses suspend accrual. A continuous ten-minute interruption or a session end starts a new bout. An explicit ten-minute rest generates a completion event. The real RitW recordings are short, so a separate accelerated demonstration exercises both thresholds."
+)
+section("How a parent reads the week")
+paragraph(
+    "RitW reports aggregate test clips by recording start date in UTC. Multiple adults may contribute to a date. Clouclip reports use one adult’s local device date and count an alert on its trigger day. Coverage sums only valid adjacent observations. A blank day is shown as unknown."
+)
+paragraph(
+    "The fictional student example runs from 16 to 22 November. It contains 268 minutes of paper study and 193 minutes of electronic study. Applying the same rules yields eight distance, four light and six rest reminders. A parent can open each day, examine the event time, and see advice about lighting, viewing distance or rest. The pattern was constructed to demonstrate a weekly report."
+)
+section("Conditions for a family pilot")
+paragraph(
+    "Seek appropriate permission and test reminder accuracy, false alarms, comfort and whether parents act on advice. Meta’s Seattle data and models carry a noncommercial license. A commercial pilot needs appropriate rights and evidence on its own hardware."
 )
 
 start("Commercial assumptions and the observed cost of grading")
@@ -190,33 +290,16 @@ section("Subscription sensitivity")
 paragraph(
     "At 55% initial paid take-up and 78% annual retention, three years of expected subscription revenue per hardware buyer equal CNY 260.10, calculated as 198 × 0.55 × (1 + 0.78 + 0.78²). At 30% take-up, the estimate falls to CNY 141.87. Both assume fixed pricing, one subscription per converted buyer, no reactivation and no discounting. The pilot must establish actual retention and acquisition cost (LumiRead Project, 2026a)."
 )
-section("Table 1. Grading price estimates from two separate workloads")
-table(
-    [
-        ["Input and workload", "Pages", "Median time", "Mean USD/page"],
-        [
-            "Desktop typeset screenshots",
-            str(len(receipts)),
-            f"{desktop_latency:.2f} s",
-            f"{desktop_cost:.5f}",
-        ],
-        [
-            "Historical iPhone photos",
-            str(len(phone["captured_pages"])),
-            f"{phone['median_seconds']:.2f} s",
-            f"{phone['mean_standard_usd']:.5f}",
-        ],
-    ],
-    [0.43, 0.09, 0.22, 0.26],
-)
+section("Historical cost of the optional grading service")
 paragraph(
-    f"The estimates apply the recorded Standard rate card to token usage, including cache reads, cache writes and output. The {len(receipts)} screenshot jobs totalled USD {sum(r['estimated_usd'] for r in receipts):.5f}. Processing time runs from worker claim to job completion. Elapsed time and prices depend on the workload and service configuration (LumiRead Project, 2026b; OpenAI, 2026)."
+    "The earlier course evaluation reported a mean estimated USD 0.00997 per typeset page and a median processing time of 9.23 seconds across 24 jobs. Nine historical phone photographs averaged USD 0.01287 and had a median of 7.50 seconds. At the earlier rate, 200 similar typeset pages would cost about USD 1.99 before hosting, support and taxes (LumiRead Project, 2026b)."
 )
+section("Desktop presentation")
 paragraph(
-    f"At 200 similar screenshot pages per year, expected grading charges would be about USD {200 * desktop_cost:.2f} per subscribed household. Hosting, support, retries without receipts, taxes and currency conversion are additional costs. Net subscription contribution also depends on channel terms and the number of pages families actually submit (LumiRead Project, 2026a, 2026b; OpenAI, 2026)."
+    "Open the eye-care notebook first. Compare a real recording with its reading labels, play the dim-light excerpt, advance an electronic session to its break, and inspect a dated report. The optional product and learning appendices can be opened separately. Frozen predictions and the sensor export run locally. A presenter can add the licensed preview through Meta’s official download form."
 )
 
-start("From an isolated family account to a new practice answer")
+start("Appendix A | Family accounts and homework practice")
 section("How the three notebooks start")
 paragraph(
     "The local app offers three demonstration identities. A begins with a short history, B with sustained practice in one skill and C with a longer history covering several skills. Selection rules were fixed before choosing three distinct validation learners. The rules use history length, skill distribution and a stable hash. Each account retains its source order. The file contains response durations but lacks dates for individual answers, so the app displays the original order identifier where a date is unavailable (ASSISTments, 2009–2010; LumiRead Project, 2026b)."
@@ -236,23 +319,6 @@ start("Online worksheet evaluation on ordinary screenshots")
 paragraph(
     "We generated 24 typeset pages with five problems each and a precomputed arithmetic key. Six categories each contributed 20 items. Problems included arithmetic, fractions, decimals, equations, area and word-problem modelling. All 24 screenshots went through the regular file-upload endpoint to the live OpenAI provider. Each receipt identifies the input image, job, provider request, model, latency and usage (LumiRead Project, 2026b)."
 )
-section("Table 2. Screenshot verdicts compared with the fixed answer key")
-table(
-    [
-        ["Reference verdict", "Graded correct", "Graded incorrect"],
-        [
-            "Correct",
-            str(confusion["correct", "correct"]),
-            str(confusion["correct", "incorrect"]),
-        ],
-        [
-            "Incorrect",
-            str(confusion["incorrect", "correct"]),
-            str(confusion["incorrect", "incorrect"]),
-        ],
-    ],
-    [0.46, 0.27, 0.27],
-)
 paragraph(
     f"The grader returned automatic verdicts for {vision['automatic']} of {vision['labelled']} items ({vision['coverage']:.1%} coverage) and agreed with the key on {vision['agreed']} ({vision['agreement']:.2%} agreement). There were {vision['unmatched_predictions']} unmatched predictions. On page 19, question 5 asked for the area of an 8 cm × 5 cm rectangle. The provider transcribed the correct answer, 40, and marked it incorrect. A family needs access to the original and to the verdict-review control even when the transcription looks right (LumiRead Project, 2026b)."
 )
@@ -264,38 +330,14 @@ paragraph(
     "A separate iPhone check used two real photographs with a changed handwritten answer, different file digests and two provider request IDs. The parent viewed each result twice. Two ten-trial field runs missed every gesture upload. The subsequent touch control produced five same-side double-tap photographs, each with a live grading result. Physical single-tap and quiet-mode controls remained open. Separately, OpenAI and DeepSeek each returned the expected answers on a two-item provider smoke test. None of these trials contribute to the screenshot agreement denominator (LumiRead Project, 2026b)."
 )
 
-start("Reading-condition replay with recorded distance and illuminance")
-paragraph(
-    "The Clouclip file reports working distance in centimetres and illuminance in lux at nominal five-second intervals. It contains 77,847 observations from one adult graduate student. We paired three continuous windows from that public recording with independent ASSISTments histories for demonstration. The two datasets describe different people. The source provides sensor readings without an activity label for reading (LumiRead Project, 2026b; Zauner et al., 2026)."
-)
-section("Table 3. Reminder events on 21 November 2020, original device time")
-table(
-    [
-        ["Window", "Samples", "Reminder opens", "Reminder clears"],
-        ["A · Stable", "14", "None", "None"],
-        ["B · Distance", "11", "09:10:13", "09:10:28"],
-        ["C · Illuminance", "10", "09:45:07", "09:45:37"],
-    ],
-    [0.36, 0.14, 0.25, 0.25],
-)
-paragraph(
-    "Three consecutive distance readings below 33 cm or light readings below 300 lx trigger the corresponding reminder. The first and third samples span ten seconds. Two consecutive readings at or above 35 cm or 350 lx clear the reminder. B begins with an isolated 25 cm reading, which correctly generates no event. C includes an isolated low distance during the lighting sequence. These cutoffs specify the classroom demonstration (LumiRead Project, 2026b; Zauner et al., 2026)."
-)
-paragraph(
-    "Each window retains its original times and row order. Pause and playback speed change when a point reaches the screen. Sleep, invalid readings and gaps interrupt the relevant consecutive-point count. An active reminder awaits valid recovery evidence. The source file, pinned revision, checksums and original line ranges allow independent reconstruction (LumiRead Project, 2026b; Zauner et al., 2026)."
-)
-paragraph(
-    "An earlier experiment estimated light classes from smartphone images. On 1,563 fixed-exposure observations from a different device, five folds held out whole desk-scene families. Accuracy was 87.91% and macro F1 was 0.8584. The desktop replay instead reads illuminance directly from the public Clouclip sensor file. Neither experiment measures a change in eyesight (Buryi, 2026; LumiRead Project, 2026b; Zauner et al., 2026)."
-)
-
-start("Knowledge tracing and the comparison on held-out learners")
+start("Appendix B | Knowledge tracing on held-out learners")
 paragraph(
     "We retained 44,212 first-attempt answers across 2,362 learners from the corrected, non-collapsed ASSISTments Skill Builder file. The pipeline maps explicit source tags to six skills, merges duplicate tags for one answer and excludes automatically scored open responses. Whole learners belong to training (1,653), validation (354) or test (355). Chronological source order keeps later answers out of each prediction (ASSISTments, 2009–2010; Feng et al., 2009; LumiRead Project, 2026b)."
 )
 paragraph(
     "The central DKT uses a 12-dimensional embedding and a 24-unit LSTM. Starting from a shared first-question state, it encodes earlier skill and correctness pairs and predicts a probability for each next skill. Training ran on an RTX 4080 SUPER. LightGBM uses the same targets with earlier counts, accuracy and recency. The family notebook runs the frozen central weights on its CPU (Ke et al., 2017; LumiRead Project, 2026b; Piech et al., 2015)."
 )
-section("Table 4. Results on 6,694 first attempts from 355 held-out learners")
+section("Table B1. Results on 6,694 first attempts from 355 held-out learners")
 score_rows = [["Model", "ROC AUC", "Accuracy", "F1", "Brier", "Short AUC"]]
 for label, key in choices:
     m = models[key]["overall"]
@@ -321,7 +363,7 @@ start("Federated learning experiment and reproducibility")
 paragraph(
     "One training learner represents one simulated client. In each round, 64 sampled clients start from the same global model and train on their own sequences for three SGD epochs. The server averages their parameters in proportion to valid prediction targets. The first answer contributes one target and padding contributes zero. The pre-specified learning rate was 0.30 and the gradient norm on each client was clipped to 5 (LumiRead Project, 2026b; McMahan et al., 2017)."
 )
-section("Table 5. Validation selected each run’s checkpoint before final testing")
+section("Table B2. Validation selection and final testing")
 table(
     [["Seed", "Selected round", "Validation AUC", "Test AUC"]]
     + [
@@ -349,29 +391,34 @@ paragraph(
     "A second complete three-seed run reproduced all 180 client selections and validation metrics and the exported weights. Standard-library CPU inference on all 6,694 federated test prefixes differed from PyTorch by at most 0.000000100. For the separate central model, 30 CPU outputs matched the CUDA reference within 0.00003781. Receiving researchers reconstruct individual learning histories locally from the pinned source and verify file digests (ASSISTments, 2009–2010; LumiRead Project, 2026b)."
 )
 
-start("Classroom demonstration and what a pilot would need to establish")
-section("A fifteen-minute desktop presentation")
-paragraph(
-    "The demonstration opens at /showcase. Rotate both product designs and inspect their components. At /app, compare the three family notebooks and replay the stable, short-distance and dim-light windows. In B, upload both versions of the worksheet and compare the two originals and live verdicts. Open a missed item, reveal a hint, review the answer and save it. Submit a practice response and inspect its count and probability (LumiRead Project, 2026b)."
-)
-paragraph(
-    "The acceptance procedure then checks that B retains its work after refresh, A and C retain their own histories, and resetting B restores its starting sequence. At /federated, select seed 16083 and round 58 and compare the displayed values with the saved record. The product assets, six-skill inference and replay run on the demonstration computer. New grading jobs require a configured online provider. The operator can retry a failed job and inspect the recorded status (LumiRead Project, 2026b)."
-)
-section("Decisions for an optical-store pilot")
-paragraph(
-    "The largest uncertainty in the business model is repeated family use. Track how many eligible buyers activate a paid plan, how often they return to a graded error, and how many continue at renewal. Record returns, fitting time, active pages per family and support contacts. Together these quantities would replace assumed take-up, retention and costs with observed contribution per hardware buyer (LumiRead Project, 2026a, 2026b)."
-)
-paragraph(
-    "The next evaluation would use permissioned household pages, multiple handwriting styles and independent grading by people. Track missed items, review frequency, incorrect automatic verdicts and whether correction restores the proper history. Separately, test reminder usefulness on children with suitable consent and study design, and evaluate calibration on later locally collected exercises. The submitted prompt and decision log documents how the team revised the capture method and classroom workflow (LumiRead Project, 2026a, 2026b; Zauner et al., 2026)."
-)
-
 
 def reference(title, url=""):
     content = title + (f' <a color="#355b48" href="{url}">{url}</a>' if url else "")
     paragraph(content, hanging=True, space=10)
 
 
-start("References")
+start("References | Eye care")
+reference(
+    "Yang, C., Alam, S., Siam, S. I., Proulx, M., Mathias, L., Somasundaram, K., Pesqueira, L., Fort, J., Sheriffdeen, S., Parkhi, O., Ren, C., Zhang, M., Chai, Y., Newcombe, R., &amp; Kim, H. J. (2025). Reading Recognition in the Wild. <i>Advances in Neural Information Processing Systems</i>.",
+    "https://arxiv.org/abs/2505.24848",
+)
+reference(
+    "Meta. (2025). <i>Reading in the Wild, Seattle dataset and models</i>. CC BY-NC 4.0. LumiRead selected the recordings, aligned signals, trained the baselines and produced the evaluated timelines.",
+    "https://github.com/facebookresearch/reading_in_the_wild",
+)
+reference(
+    "Ministry of Education of China and seven other departments. (2018). <i>Comprehensive plan for the prevention and control of myopia in children and adolescents</i>.",
+    "https://www.moe.gov.cn/srcsite/A17/moe_943/s3285/201808/t20180830_346672.html",
+)
+reference(
+    "National Health Commission of China. (2020). <i>WS/T 773–2020. Hygienic requirements for using video displays in online learning by primary and secondary school students</i>.",
+    "https://www.nhc.gov.cn/fzs/c100048/202008/d42388863f2340c4a3ca880b3e6b2c50/files/1733125825170_45982.pdf",
+)
+reference(
+    "Zauner, J., Nicholls, A., Ostrin, L. A., &amp; Spitschan, M. (2026). Analysis of human visual experience data. <i>Journal of Vision, 26</i>(7), Article 1.",
+    "https://doi.org/10.1167/jov.26.7.1",
+)
+start("References | Business and learning")
 reference(
     "ASSISTments. (2009–2010). <i>2009–2010 ASSISTment data: Skill builder, corrected release</i> [Data set].",
     "https://sites.google.com/site/assistmentsdata/home/2009-2010-assistment-data/skill-builder-data-2009-2010",
@@ -410,10 +457,6 @@ reference(
 reference(
     "Piech, C., Bassen, J., Huang, J., Ganguli, S., Sahami, M., Guibas, L. J., &amp; Sohl-Dickstein, J. (2015). Deep knowledge tracing. <i>Advances in Neural Information Processing Systems, 28</i>.",
     "https://papers.nips.cc/paper/5654-deep-knowledge-tracing",
-)
-reference(
-    "Zauner, J., Nicholls, A., Ostrin, L. A., &amp; Spitschan, M. (2026). Analysis of human visual experience data. <i>Journal of Vision, 26</i>(7), Article 1.",
-    "https://doi.org/10.1167/jov.26.7.1",
 )
 c.save()
 print(OUT)

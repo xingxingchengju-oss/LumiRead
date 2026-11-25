@@ -32,10 +32,31 @@ def clean_smoke():
     with tempfile.TemporaryDirectory() as folder:
         os.environ["LUMIREAD_VAR"] = folder
         with TestClient(app) as client:
-            for path in ("/showcase", "/app", "/federated", "/api/v1/products"):
+            for path in (
+                "/",
+                "/eye-care",
+                "/showcase",
+                "/app",
+                "/federated",
+                "/api/v1/products",
+            ):
                 check(
                     client.get(path).status_code == 200, "Clean entry failed: " + path
                 )
+            reading = client.get("/api/v1/eye-care/research").json()
+            check(
+                len(reading["clips"])
+                == reading["metrics"]["splits"]["test"]["recordings"]
+                == 30,
+                "The eye-care demo requires the frozen held-out recordings",
+            )
+            dim = client.get("/api/v1/eye-care/excerpts/dim").json()["events"]
+            check(
+                len(dim) == 1
+                and dim[0]["started_at"].endswith("09:45:27")
+                and dim[0]["ended_at"].endswith("09:45:37"),
+                "Dim-light replay does not match the 30-second rule",
+            )
             fed = client.get("/api/v1/federated").json()
             check(len(fed["runs"]) == 3, "The federated report is incomplete")
             hashes = set()
@@ -59,7 +80,7 @@ def clean_smoke():
                 )
             check(len(hashes) == 3, "Expected three distinct real learners")
     print(
-        "Clean build served the three desktop routes, actual frozen training report and three independently seeded profiles."
+        "Clean runtime served the eye-care dashboard, measured alerts, model reports and three independently seeded learning profiles."
     )
 
 

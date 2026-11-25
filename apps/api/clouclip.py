@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS clouclip_playbacks(
     status TEXT NOT NULL DEFAULT 'ready' CHECK(status IN ('ready','playing','paused','finished')),
     speed INTEGER NOT NULL DEFAULT 1 CHECK(speed IN (1,4,10)),
     position REAL NOT NULL DEFAULT 0, anchor REAL,
-    processed INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0
+    processed INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0,
+    scene TEXT NOT NULL DEFAULT 'paper'
 );
 CREATE TABLE IF NOT EXISTS clouclip_events(
     sid TEXT NOT NULL REFERENCES clouclip_playbacks(sid) ON DELETE CASCADE,
@@ -30,7 +31,9 @@ CREATE TABLE IF NOT EXISTS clouclip_events(
 SegmentId = Literal["stable", "near", "dim"]
 Speed = Literal[1, 4, 10]
 Metric = Literal["Dis", "Lux"]
-RULES = {"Dis": (33, 35), "Lux": (300, 350)}
+Scene = Literal["paper", "phone", "computer"]
+DISTANCES = {"paper": 33, "phone": 40, "computer": 50}
+RULE_VERSION = "clouclip-duration-v2"
 
 
 class Record(BaseModel):
@@ -49,6 +52,10 @@ class Episode(BaseModel):
     started_at: str
     end_line: int | None = None
     ended_at: str | None = None
+    source: str = "Clouclip"
+    scene: Scene = "paper"
+    scene_source: str = "manual_scenario"
+    rule_version: str = RULE_VERSION
 
 
 class Source(BaseModel):
@@ -82,17 +89,22 @@ class Playback(BaseModel):
     position_seconds: float
     records: list[Record]
     events: list[Episode]
+    scene: Scene
+    distance_limit_cm: int
 
 
 class Control(BaseModel):
-    action: Literal["play", "pause", "replay", "speed"]
+    action: Literal["play", "pause", "replay", "speed", "scene"]
     speed: Speed | None = None
+    scene: Scene | None = None
     generation: int = Field(ge=0)
 
     @model_validator(mode="after")
     def valid_speed(self):
         if (self.action == "speed") != (self.speed is not None):
             raise ValueError("Choose a speed only when changing replay speed.")
+        if (self.action == "scene") != (self.scene is not None):
+            raise ValueError("Choose a scene only when changing the rule scenario.")
         return self
 
 
@@ -132,35 +144,47 @@ def dataset():
     return Source(**manifest["source"]), result
 
 
-def evaluate(points):
+def evaluate(points, scene: Scene = "paper"):
     """Pure prefix evaluation. Missing data clears streaks and never proves recovery."""
     events = []
-    for metric, (low, recovered) in RULES.items():
+    distance = DISTANCES[scene]
+    for metric, low, recovered, seconds in (
+        ("Dis", distance, distance + 2, 10),
+        ("Lux", 300, 350, 30),
+    ):
         episode = None
-        streak = 0
+        first_low = None
+        recovery_points = 0
         previous = None
         for point in points:
-            if previous is not None and point.offset_seconds - previous != 5:
-                streak = 0
+            if previous is not None and not 0 < point.offset_seconds - previous <= 5:
+                first_low, recovery_points = None, 0
             previous = point.offset_seconds
             value = point.distance_cm if metric == "Dis" else point.illuminance_lx
             if value is None:
-                streak = 0
+                first_low, recovery_points = None, 0
                 continue
             if episode is None:
-                streak = streak + 1 if value < low else 0
-                if streak == 3:
+                if value >= low:
+                    first_low = None
+                    continue
+                if first_low is None:
+                    first_low = point.offset_seconds
+                if point.offset_seconds - first_low >= seconds:
                     episode = Episode(
-                        metric=metric, start_line=point.line, started_at=point.Date
+                        metric=metric,
+                        start_line=point.line,
+                        started_at=point.Date,
+                        scene=scene,
                     )
                     events.append(episode)
-                    streak = 0
+                    first_low = None
             else:
-                streak = streak + 1 if value >= recovered else 0
-                if streak == 2:
+                recovery_points = recovery_points + 1 if value >= recovered else 0
+                if recovery_points == 2:
                     episode.end_line, episode.ended_at = point.line, point.Date
                     episode = None
-                    streak = 0
+                    recovery_points = 0
     return sorted(events, key=lambda e: (e.start_line, e.metric))
 
 
@@ -168,6 +192,18 @@ def initialize():
     db = storage.connect()
     try:
         db.executescript(SCHEMA)
+        db.execute("BEGIN IMMEDIATE")
+        if "scene" not in {
+            r["name"] for r in db.execute("PRAGMA table_info(clouclip_playbacks)")
+        }:
+            db.execute(
+                "ALTER TABLE clouclip_playbacks ADD COLUMN scene TEXT NOT NULL DEFAULT 'paper'"
+            )
+            db.execute("DELETE FROM clouclip_events")
+            for row in db.execute("SELECT * FROM clouclip_playbacks"):
+                points = dataset()[1][row["segment"]][1]
+                save_events(db, row["sid"], evaluate(points[: row["processed"]]))
+        db.commit()
     finally:
         db.close()
 
@@ -190,6 +226,18 @@ def playback_row(db, sid):
     return row
 
 
+def save_events(db, sid, events):
+    db.executemany(
+        """INSERT INTO clouclip_events(sid,metric,start_line,started_at,end_line,ended_at)
+        VALUES(?,?,?,?,?,?) ON CONFLICT(sid,metric,start_line) DO UPDATE SET
+        end_line=excluded.end_line, ended_at=excluded.ended_at""",
+        [
+            (sid, e.metric, e.start_line, e.started_at, e.end_line, e.ended_at)
+            for e in events
+        ],
+    )
+
+
 def advance(db, row, now):
     if row["status"] != "playing":
         return row["position"]
@@ -201,15 +249,7 @@ def advance(db, row, now):
     )
     count = bisect.bisect_right(points, position, key=lambda p: p.offset_seconds)
     if count > row["processed"]:
-        for e in evaluate(points[:count]):
-            db.execute(
-                """
-                INSERT INTO clouclip_events(sid,metric,start_line,started_at,end_line,ended_at)
-                VALUES(?,?,?,?,?,?) ON CONFLICT(sid,metric,start_line) DO UPDATE SET
-                end_line=excluded.end_line, ended_at=excluded.ended_at
-            """,
-                (sid, e.metric, e.start_line, e.started_at, e.end_line, e.ended_at),
-            )
+        save_events(db, sid, evaluate(points[:count], row["scene"]))
         db.execute(
             "UPDATE clouclip_playbacks SET processed=? WHERE sid=?", (count, sid)
         )
@@ -257,7 +297,9 @@ def state(db, sid, now):
         generation=row["generation"],
         position_seconds=position,
         records=points[: row["processed"]],
-        events=[Episode(**e) for e in events],
+        events=[Episode(**e, scene=row["scene"]) for e in events],
+        scene=row["scene"],
+        distance_limit_cm=DISTANCES[row["scene"]],
     )
 
 
@@ -267,7 +309,14 @@ def control(db, sid, action, now):
     # Ignore a duplicate replay or a stale command sent before the last reset.
     if action.generation != row["generation"]:
         return state(db, sid, now)
-    if action.action == "replay":
+    if action.action == "scene" and action.scene != row["scene"]:
+        db.execute("DELETE FROM clouclip_events WHERE sid=?", (sid,))
+        db.execute(
+            """UPDATE clouclip_playbacks SET scene=?, status='ready', position=0,
+                   anchor=NULL, processed=0, generation=generation+1 WHERE sid=?""",
+            (action.scene, sid),
+        )
+    elif action.action == "replay":
         db.execute("DELETE FROM clouclip_events WHERE sid=?", (sid,))
         db.execute(
             "UPDATE clouclip_playbacks SET status='playing', position=0, anchor=?, "

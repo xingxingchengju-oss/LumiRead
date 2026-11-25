@@ -27,7 +27,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import clouclip, contracts, demo, learning, sensors, storage
+from . import clouclip, contracts, demo, eyecare, learning, sensors, storage
 from .catalog import PRODUCTS
 from .vision import MAX_BYTES, Skill, config, normalize_photo
 
@@ -115,6 +115,7 @@ def ticket(db, request, response, sid, role):
 
 app.include_router(demo.make_router(member, ticket, COOKIE), prefix=API)
 app.include_router(clouclip.make_router(member), prefix=API)
+app.include_router(eyecare.router, prefix=API)
 
 
 class CreateSession(BaseModel):
@@ -701,6 +702,7 @@ def alert_seen(sid: str, aid: str, request: Request):
     return Response(status_code=204)
 
 
+@app.get("/eye-care")
 @app.get("/showcase")
 @app.get("/legacy-app")
 @app.get("/federated")

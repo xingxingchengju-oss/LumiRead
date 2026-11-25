@@ -18,12 +18,9 @@ from apps.api import storage
 
 
 def serve(port):
-    from apps.api import demo
 
     if not (ROOT / "apps/web/dist/index.html").is_file():
         raise SystemExit("Build the interface with make web.")
-    if not demo.SEEDS.is_file():
-        raise SystemExit("Prepare real account histories with make demo-accounts.")
     storage.initialize()
     with socket.create_server(("127.0.0.1", port)) as listener:
         worker = subprocess.Popen([sys.executable, "-m", "apps.api.worker"], cwd=ROOT)
@@ -52,6 +49,7 @@ def serve(port):
             "parent": f"http://127.0.0.1:{port}/app",
         }
         record.write_text(json.dumps(data))
+        print(f"LumiRead eye-care dashboard: http://127.0.0.1:{port}/", flush=True)
         print(f"LumiRead product launch: http://127.0.0.1:{port}/showcase", flush=True)
         try:
             server.run(sockets=[listener])

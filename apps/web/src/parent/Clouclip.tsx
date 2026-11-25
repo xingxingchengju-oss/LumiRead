@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { api, json, message } from "../api";
-import { brightnessNotice, distanceNotice } from "../eyeMessages";
 import { Chart } from "./Chart";
 import "./clouclip.css";
 
@@ -14,7 +13,31 @@ type Sample = {
   illuminance_lx: number | null;
   offset_seconds: number;
 };
-type Replay = {
+export type Scene = "paper" | "phone" | "computer";
+export const scenes = {
+  paper: "纸质阅读",
+  phone: "手机观看",
+  computer: "电脑观看",
+};
+const notices = {
+  paper: "书本离眼睛有点近，请稍微坐远一些。",
+  phone: "请把手机拿远一些。",
+  computer: "请拉开与电脑屏幕的距离。",
+};
+export function sensorMessage(
+  metric: Metric,
+  scene: Scene,
+  recovered: boolean,
+) {
+  if (recovered)
+    return metric === "Dis" ? "工作距离读数已恢复。" : "佩戴位置照度已恢复。";
+  return metric === "Dis"
+    ? notices[scene]
+    : "当前光线可能偏暗，请检查桌面照明。";
+}
+export type Replay = {
+  scene: Scene;
+  distance_limit_cm: number;
   source: {
     file_url: string;
     supplement: string;
@@ -51,7 +74,13 @@ const statuses = {
 };
 const timePart = (date: string) => date.slice(11);
 
-function SensorTrend({ replay, metric }: { replay: Replay; metric: Metric }) {
+export function SensorTrend({
+  replay,
+  metric,
+}: {
+  replay: Replay;
+  metric: Metric;
+}) {
   const distance = metric === "Dis";
   const title = distance ? "工作距离" : "环境照度";
   const unit = distance ? "cm" : "lx";
@@ -59,8 +88,8 @@ function SensorTrend({ replay, metric }: { replay: Replay; metric: Metric }) {
   const latest = replay.records.at(-1);
   const value =
     latest && (distance ? latest.distance_cm : latest.illuminance_lx);
-  const threshold = distance ? 33 : 300;
-  const recovery = distance ? 35 : 350;
+  const threshold = distance ? replay.distance_limit_cm : 300;
+  const recovery = distance ? threshold + 2 : 350;
   const duration = replay.segment.duration_seconds;
   const start = Date.parse(replay.segment.starts_at.replace(" ", "T") + "Z");
   const plot = replay.records.map((r) => [
@@ -258,8 +287,8 @@ function ReplayPanel({ sid, onOpen }: { sid: string; onOpen?: () => void }) {
     };
   }, [endpoint]);
   async function control(
-    action: "play" | "pause" | "replay" | "speed",
-    speed?: number,
+    action: "play" | "pause" | "replay" | "speed" | "scene",
+    value?: number | Scene,
   ) {
     if (!replay || pending.current) return;
     pending.current = true;
@@ -268,7 +297,12 @@ function ReplayPanel({ sid, onOpen }: { sid: string; onOpen?: () => void }) {
     try {
       const body = await api<Replay>(
         endpoint + "/control",
-        json("POST", { action, speed, generation: replay.generation }),
+        json("POST", {
+          action,
+          speed: action === "speed" ? value : undefined,
+          scene: action === "scene" ? value : undefined,
+          generation: replay.generation,
+        }),
       );
       if (alive.current) {
         setReplay(body);
@@ -313,6 +347,20 @@ function ReplayPanel({ sid, onOpen }: { sid: string; onOpen?: () => void }) {
         片段。学习档案与传感器记录来自不同来源。
       </p>
       <div className="clouclip-controls">
+        <label>
+          手动选择场景{" "}
+          <select
+            value={replay.scene}
+            disabled={busy}
+            onChange={(e) => void control("scene", e.target.value as Scene)}
+          >
+            {Object.entries(scenes).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
         <button
           type="button"
           disabled={busy || replay.status === "finished"}
@@ -376,7 +424,7 @@ function ReplayPanel({ sid, onOpen }: { sid: string; onOpen?: () => void }) {
             {replay.events.map((e) => (
               <li key={e.metric + "-" + e.start_line}>
                 <strong>
-                  {e.metric === "Dis" ? distanceNotice : brightnessNotice}
+                  {sensorMessage(e.metric, replay.scene, !!e.ended_at)}
                 </strong>
                 <span>
                   {timePart(e.started_at)} 触发 ·{" "}
@@ -400,9 +448,8 @@ function ReplayPanel({ sid, onOpen }: { sid: string; onOpen?: () => void }) {
       <details>
         <summary>演示阈值与来源</summary>
         <p>
-          两项指标独立判断。低于触发线连续 3 个有效点时提醒，达到恢复线连续 2
-          个有效点时解除。每 5 秒采样一次，3 个连续点的首末相隔 10
-          秒。缺测、休眠和时间间断会清零相应计数。
+          距离偏近持续 10 秒或佩戴位置照度偏低持续 30
+          秒时提醒。连续两个有效读数达到恢复线时解除。缺测、休眠和断采会中断计时。导出时间戳验证规则时序。
         </p>
         <p>
           原文件第 {segment.first_line}–{segment.last_line}{" "}

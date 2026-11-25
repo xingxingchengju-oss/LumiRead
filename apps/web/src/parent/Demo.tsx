@@ -362,6 +362,7 @@ export default function Demo() {
             LumiRead
           </a>
           <nav aria-label="站点导航">
+            <a href="/">护眼手册</a>
             <a href="/showcase">产品展示</a>
             <a href="/federated">
               联邦学习实验 <span aria-hidden="true">↗</span>

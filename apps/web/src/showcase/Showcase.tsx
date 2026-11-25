@@ -352,6 +352,7 @@ export default function Showcase() {
             <b>LumiRead</b>
           </a>
           <div className="lr-nav-links">
+            <a href="/">护眼手册</a>
             {chapters.map((s) => (
               <a
                 key={s.id}

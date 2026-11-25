@@ -4,3 +4,4 @@ data/dkt/*.json -text
 data/clouclip/*.csv -text
 data/vision/original/** -text
 ml/vision/legacy/assets/** -text
+reports/*.pdf binary

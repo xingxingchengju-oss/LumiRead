@@ -245,6 +245,7 @@ test("mobile 3D accepts horizontal drags and vertical page scrolls on the same c
   try {
     const page = await phone.newPage();
     await page.goto("/");
+    await page.getByRole("link", { name: "眼镜设计" }).tap();
     const surface = page.getByRole("region", { name: "交互眼镜模型" });
     await expect(surface).toHaveAttribute("data-renderer", "webgl", {
       timeout: 20000,
