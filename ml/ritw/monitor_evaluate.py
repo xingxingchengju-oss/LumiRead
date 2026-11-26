@@ -6,7 +6,14 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from apps.api.monitor import RULE, TICKS, score, timeline
+from apps.api.monitor import (
+    FULL_REST_SECONDS,
+    RULE,
+    SCORE_POLICY,
+    TICKS,
+    score,
+    timeline,
+)
 
 from .monitor_frames import WORK, write_json
 from .monitor_panel import panel, reading_intervals
@@ -139,7 +146,7 @@ def simulation():
     spans = [
         ("reading", "phone", 900),
         ("reading", "paper", 1200),
-        ("rest", "none", 360),
+        ("rest", "none", FULL_REST_SECONDS),
     ]
     points, events = score((a, m) for a, m, length in spans for _ in range(length))
     return {
@@ -147,7 +154,8 @@ def simulation():
         "spans": spans,
         "reminders": events,
         "score_by_second": {
-            s: round(points[s][2] / TICKS, 2) for s in (0, 900, 2100, 2110, 2112, 2460)
+            s: round(points[s][2] / TICKS, 2)
+            for s in (0, 900, 2100, 2110, 2112, 2460, len(points) - 1)
         },
     }
 
@@ -236,7 +244,12 @@ def main():
         )
     write_json(
         args.out / "monitor.json",
-        {"rule_version": RULE, "ticks_per_point": TICKS, "clips": clips},
+        {
+            "rule_version": RULE,
+            "ticks_per_point": TICKS,
+            "score_policy": SCORE_POLICY,
+            "clips": clips,
+        },
     )
     print(
         json.dumps(

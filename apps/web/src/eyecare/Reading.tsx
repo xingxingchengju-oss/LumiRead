@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { components } from "../../../../packages/contracts/types";
+import ScoreGuide from "./ScoreGuide";
 import { duration, Loading, usePublic } from "./shared";
 
 type Monitor = components["schemas"]["Monitor"];
 type Clip = components["schemas"]["MonitorClip"];
 type Patch = Clip["patches"][number];
+type Policy = Monitor["score_policy"];
 const activities = {
   reading: "阅读",
   video: "看视频",
@@ -37,24 +39,44 @@ function label(p: Pick<Patch, "activity" | "medium">) {
     ? activities[p.activity] + " · " + media[p.medium]
     : activities[p.activity];
 }
-function scoring(p: Patch) {
-  if (p.activity === "rest")
-    return "连续休息前 10 秒保持积分，从第 11 秒起每秒减 2/7 分。";
+function scoring(p: Patch, policy: Policy, scoreAt: (t: number) => number) {
+  if (p.activity === "rest") {
+    if (scoreAt(p.start) === 0) return "本段从零分开始，继续休息时保持零分。";
+    let decreasing = 0;
+    for (let t = p.start; t < p.end; t++) {
+      if (scoreAt(t + 1) < scoreAt(t)) decreasing++;
+    }
+    if (decreasing === 0)
+      return `这段休息仍在前 ${policy.rest_grace_seconds} 秒的缓冲内，积分保持。`;
+    return `休息时间跨片段累计。本段有 ${decreasing} 秒已过 ${policy.rest_grace_seconds} 秒缓冲，每秒减 ${policy.rest_points_per_second} 分，最低为零。`;
+  }
   if (p.activity === "unknown") return "活动待定，这些秒数冻结积分。";
-  if (p.activity === "reading" && p.medium === "unknown")
-    return "已确认阅读，时长照计。媒介待定，积分冻结。";
-  const rate =
-    p.activity === "video" || p.medium === "phone"
-      ? "1/3"
-      : p.medium === "computer"
-        ? "2/7"
-        : "1/4";
-  return "此标签每 6 个有效秒加 " + rate + " 分，余秒带入后续片段。";
+  const category = p.activity === "video" ? "video" : p.medium;
+  const tier = policy.tiers.find((t) =>
+    t.categories.some((c) => c === category),
+  );
+  if (!tier) return "已确认阅读，时长照计。媒介待定，积分冻结。";
+  if (
+    scoreAt(p.start) === policy.max_points &&
+    scoreAt(p.end) === policy.max_points
+  )
+    return "积分已达上限，本段保持满分。";
+  return `每 ${policy.settlement_seconds} 个有效秒加 ${tier.points_per_settlement} 分，余秒带入后续片段。`;
 }
 
-function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
+function Replay({
+  clip,
+  ticks,
+  policy,
+}: {
+  clip: Clip;
+  ticks: number;
+  policy: Policy;
+}) {
   const video = useRef<HTMLVideoElement>(null);
   const rail = useRef<HTMLDivElement>(null);
+  const scoreButton = useRef<HTMLButtonElement>(null);
+  const resumeAfterGuide = useRef(false);
   const cursor = useRef(clip.start);
   const announced = useRef(new Set<number>());
   const [position, setPosition] = useState(clip.start);
@@ -62,6 +84,7 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
   const [speed, setSpeed] = useState(1);
   const [failed, setFailed] = useState(false);
   const [notice, setNotice] = useState("");
+  const [guideOpen, setGuideOpen] = useState(false);
   const index = Math.min(
     clip.end - clip.start,
     Math.max(0, Math.floor(position) - clip.start),
@@ -75,6 +98,14 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
   const evidence =
     patch.review ??
     clip.patches.find((p) => p.start === patch.evidence_start)?.review;
+  const scoreAt = (t: number) => clip.points[t - clip.start][2] / ticks;
+  const startScore = scoreAt(patch.start);
+  const endScore = scoreAt(patch.end);
+  const reason =
+    scoring(patch, policy, scoreAt) +
+    (patch.missing.length
+      ? `本段缺失的 ${patch.missing.length} 秒冻结积分，并中断连续休息。`
+      : "");
   const change = (p: Patch) => {
     const delta =
       (clip.points[p.end - clip.start][2] -
@@ -94,32 +125,36 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
       if (next === clip.end) v.pause();
     }
   }
+  const syncPlayback = useCallback(
+    (v: HTMLVideoElement) => {
+      if (v.seeking) return;
+      const at = Math.max(clip.start, Math.min(clip.end, v.currentTime));
+      for (const t of clip.reminders) {
+        if (cursor.current < t && t <= at && !announced.current.has(t)) {
+          announced.current.add(t);
+          setNotice(
+            `${duration(t)}　提醒积分已达 ${policy.max_points}，休息一下。`,
+          );
+        }
+      }
+      cursor.current = at;
+      setPosition(at);
+      if (at >= clip.end) v.pause();
+    },
+    [clip, policy.max_points],
+  );
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || guideOpen) return;
     let frame = 0;
     function follow() {
       const v = video.current;
-      if (!v) return;
-      if (!v.seeking) {
-        const at = Math.max(clip.start, Math.min(clip.end, v.currentTime));
-        for (const t of clip.reminders) {
-          if (cursor.current < t && t <= at && !announced.current.has(t)) {
-            announced.current.add(t);
-            setNotice(duration(t) + "　提醒积分已达 100，休息一下。");
-          }
-        }
-        cursor.current = at;
-        setPosition(at);
-        if (at >= clip.end) {
-          v.pause();
-          return;
-        }
-      }
+      if (!v || v.paused) return;
+      syncPlayback(v);
       frame = requestAnimationFrame(follow);
     }
     frame = requestAnimationFrame(follow);
     return () => cancelAnimationFrame(frame);
-  }, [playing, clip]);
+  }, [playing, guideOpen, syncPlayback]);
   useEffect(() => {
     const container = rail.current;
     const selected = container?.querySelector<HTMLElement>(
@@ -135,19 +170,35 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
       container.scrollLeft = Math.max(0, offset - container.clientWidth / 3);
   }, [patch.start]);
 
-  async function toggle() {
-    const v = video.current;
-    if (!v) return;
-    if (playing) {
-      v.pause();
-      return;
-    }
-    if (position >= clip.end) seek(clip.start);
+  async function play(v: HTMLVideoElement) {
     try {
       await v.play();
     } catch {
       setNotice("录像暂时无法播放，请重试。");
     }
+  }
+  function toggle() {
+    const v = video.current;
+    if (!v) return;
+    if (!v.paused) return v.pause();
+    if (position >= clip.end) seek(clip.start);
+    void play(v);
+  }
+  function openGuide() {
+    const v = video.current;
+    resumeAfterGuide.current =
+      !!v && !v.paused && !v.ended && v.currentTime < clip.end;
+    if (v && !v.paused) {
+      v.pause();
+      syncPlayback(v);
+    }
+    setGuideOpen(true);
+  }
+  function closeGuide() {
+    setGuideOpen(false);
+    scoreButton.current?.focus({ preventScroll: true });
+    if (resumeAfterGuide.current && video.current) void play(video.current);
+    resumeAfterGuide.current = false;
   }
 
   return (
@@ -250,14 +301,40 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
           <small>累计视频时长</small>
           <strong>{duration(watched)}</strong>
         </div>
-        <div className="ec-score">
-          <small>用眼提醒积分</small>
+        <button
+          type="button"
+          className="ec-score"
+          ref={scoreButton}
+          aria-haspopup="dialog"
+          onClick={openGuide}
+        >
+          <span className="ec-score-top">
+            <small>用眼提醒积分</small>
+            <span>
+              了解积分 <b aria-hidden="true">›</b>
+            </span>
+          </span>
           <strong>
-            {(score / ticks).toFixed(2)} <small>/ 100</small>
+            {(score / ticks).toFixed(2)} <small>/ {policy.max_points}</small>
           </strong>
-          <progress aria-label="用眼提醒积分" max={100} value={score / ticks} />
-        </div>
+          <progress
+            aria-hidden="true"
+            max={policy.max_points}
+            value={score / ticks}
+          />
+        </button>
       </div>
+      {guideOpen && (
+        <ScoreGuide
+          policy={policy}
+          activity={label(patch)}
+          range={duration(patch.start) + "–" + duration(patch.end)}
+          startScore={startScore.toFixed(2)}
+          endScore={endScore.toFixed(2)}
+          reason={(missingNow ? "当前秒数据缺失。" : "") + reason}
+          onClose={closeGuide}
+        />
+      )}
       {notice && (
         <p role="status" className="ec-event">
           {notice}
@@ -321,8 +398,7 @@ function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
           </p>
         )}
         <p>
-          本段积分 {change(patch)}。{scoring(patch)}
-          {patch.missing.length > 0 && "缺失秒冻结积分，并中断连续休息。"}
+          本段积分 {change(patch)}。{reason}
         </p>
       </section>
     </>
@@ -351,7 +427,12 @@ export default function Reading() {
           ))}
         </div>
       </header>
-      <Replay key={clip.id} clip={clip} ticks={ticks_per_point} />
+      <Replay
+        key={clip.id}
+        clip={clip}
+        ticks={ticks_per_point}
+        policy={resource.data.score_policy}
+      />
     </section>
   );
 }

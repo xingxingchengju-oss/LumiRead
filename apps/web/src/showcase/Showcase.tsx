@@ -8,13 +8,18 @@ import {
   useState,
   type KeyboardEvent,
   type MouseEvent,
+  type RefObject,
 } from "react";
 import { api, message, type Catalog } from "../api";
 import {
   chapters,
   choices,
   explanation,
-  exposedTemple,
+  exposedShell,
+  posterKey,
+  wholePosters,
+  sensors,
+  type ScrollTrack,
   markers,
   partGroups,
   parts,
@@ -23,6 +28,7 @@ import {
   type Selection,
   type Wear,
 } from "./product";
+import { SensingPaper, RangeLine } from "./Sensing";
 import "./showcase.css";
 
 const Viewer = lazy(() => import("./Viewer"));
@@ -30,34 +36,56 @@ const money = (value: number) => "¥" + value.toLocaleString("zh-CN");
 
 function useChapter() {
   const [chapter, setChapter] = useState<Chapter>("top");
+  const track = useRef<ScrollTrack>({ progress: 0 });
   useLayoutEffect(() => {
-    const stops = chapters.map(({ id }) => document.getElementById(id)!);
+    const first = document.getElementById(chapters[0].id)!;
+    const stage = document.querySelector<HTMLElement>(".lr-stage")!;
     let ticket = 0;
     const measure = () => {
       ticket = 0;
-      const threshold = window.innerHeight * 0.5;
-      let current: Chapter = "top";
-      for (const [index, el] of stops.entries()) {
-        if (el.getBoundingClientRect().top <= threshold)
-          current = chapters[index].id;
-      }
-      setChapter(current);
+      const rect = first.getBoundingClientRect();
+      const bar = parseFloat(getComputedStyle(first).scrollMarginTop) || 0;
+      const progress = Math.min(
+        chapters.length - 1,
+        Math.max(0, (bar - rect.top) / (rect.height || 1)),
+      );
+      track.current.progress = progress;
+      const low = Math.floor(progress),
+        high = Math.min(chapters.length - 1, low + 1);
+      const t = progress - low,
+        blend = t * t * (3 - 2 * t);
+      const light = (i: number) =>
+        Number(["explore", "specifications"].includes(chapters[i].id));
+      stage.style.setProperty(
+        "--scroll-wash",
+        String(light(low) + (light(high) - light(low)) * blend),
+      );
+      track.current.redraw?.();
+      setChapter(chapters[Math.round(progress)].id);
     };
     const schedule = () => {
       if (!ticket) ticket = requestAnimationFrame(measure);
     };
-    const initial = stops.find((el) => "#" + el.id === location.hash);
-    if (initial) initial.scrollIntoView({ behavior: "instant" });
-    measure();
+    const anchor = () => {
+      const stop = chapters.find((c) => "#" + c.id === location.hash);
+      if (stop)
+        document
+          .getElementById(stop.id)
+          ?.scrollIntoView({ behavior: "instant" });
+      measure();
+    };
+    anchor();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    window.addEventListener("hashchange", anchor);
     return () => {
       cancelAnimationFrame(ticket);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
+      window.removeEventListener("hashchange", anchor);
     };
   }, []);
-  return chapter;
+  return { chapter, track };
 }
 
 function LensOptions({
@@ -94,12 +122,17 @@ function PartLinks({
   pick,
 }: {
   items: Part[];
-  pick: (item: Selection) => void;
+  pick: (item: Selection, trigger?: HTMLElement) => void;
 }) {
   return (
     <div className="lr-part-links">
       {items.map((id) => (
-        <button key={id} type="button" onClick={() => pick({ part: id })}>
+        <button
+          key={id}
+          type="button"
+          data-return={"link-" + id}
+          onClick={(e) => pick({ part: id }, e.currentTarget)}
+        >
           {parts[id].name}
           <span aria-hidden="true">+</span>
         </button>
@@ -117,100 +150,239 @@ function BookMark() {
   );
 }
 
+function ProductNav({
+  chapter,
+  go,
+}: {
+  chapter: Chapter;
+  go: (event: MouseEvent<HTMLAnchorElement>, id: Chapter) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const nav = useRef<HTMLElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const label = chapters.find((c) => c.id === chapter)!.label;
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => {
+      if (!nav.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [open]);
+  const navigate = (e: MouseEvent<HTMLAnchorElement>, id: Chapter) => {
+    if (open && e.detail === 0) toggle.current?.focus();
+    setOpen(false);
+    go(e, id);
+  };
+  return (
+    <nav
+      ref={nav}
+      className="lr-nav"
+      aria-label="产品导航"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(e) => {
+        if (open && e.key === "Escape") {
+          e.stopPropagation();
+          setOpen(false);
+          toggle.current?.focus();
+        }
+      }}
+    >
+      <div className="lr-nav-inner">
+        <a
+          className="lr-brand"
+          href="#top"
+          aria-label="LumiRead 产品首页"
+          onClick={(e) => navigate(e, "top")}
+        >
+          <BookMark />
+          <b>LumiRead</b>
+        </a>
+        <div className="lr-nav-links">
+          <button
+            type="button"
+            ref={toggle}
+            className="lr-chapter-toggle"
+            aria-expanded={open}
+            aria-controls="lr-chapter-list"
+            aria-label={"浏览章节，当前为" + label}
+            onClick={() => setOpen(!open)}
+          >
+            {label}
+          </button>
+          <div
+            id="lr-chapter-list"
+            className="lr-chapter-list"
+            data-open={open}
+          >
+            <a href="/">护眼手册</a>
+            {chapters
+              .filter((c) => c.id !== "specifications")
+              .map((c) => (
+                <a
+                  key={c.id}
+                  href={"#" + c.id}
+                  aria-current={chapter === c.id ? "location" : undefined}
+                  onClick={(e) => navigate(e, c.id)}
+                >
+                  {c.label}
+                </a>
+              ))}
+          </div>
+          <a
+            href="#specifications"
+            className="lr-price-link"
+            aria-current={chapter === "specifications" ? "location" : undefined}
+            onClick={(e) => navigate(e, "specifications")}
+          >
+            查看价格
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 type PosterPoints = Record<string, Record<string, [number, number]>>;
 function Poster({
   wear,
   chapter,
   selected,
   interactive,
+  photographing,
+  project,
   select,
 }: {
   wear: Wear;
   chapter: Chapter;
   selected: Selection | null;
   interactive: boolean;
-  select: (item: Selection) => void;
+  photographing: boolean;
+  project: RefObject<(() => void) | null>;
+  select: (item: Selection, trigger?: HTMLElement) => void;
 }) {
   const [points, setPoints] = useState<PosterPoints>();
+  const [painted, setPainted] = useState<{
+    src: string;
+    srcSet?: string;
+    sizes: string;
+    alt: string;
+  }>();
+  const art = useRef<HTMLDivElement>(null);
+  const key = posterKey(wear, chapter, selected),
+    whole = wholePosters.has(key);
+  const clip = wear === "clip",
+    positions = points?.[key],
+    src = "/products/" + key;
   useEffect(() => {
     if (!interactive) return;
-    const controller = new AbortController();
-    fetch("/products/poster-points.json", { signal: controller.signal })
+    const control = new AbortController();
+    fetch("/products/poster-points.json", { signal: control.signal })
       .then((r) => (r.ok ? r.json() : undefined))
       .then(setPoints)
       .catch(() => {});
-    return () => controller.abort();
+    return () => control.abort();
   }, [interactive]);
-  const clip = wear === "clip";
-  const key = clip
-    ? "clip"
-    : exposedTemple(selected?.part)
-      ? "frame-inside"
-      : wear === "open"
-        ? "frame-open"
-        : "frame";
-  const positions = points?.[key];
-  const focus =
-    selected && selected.part !== "lens" && positions?.[selected.part];
-  const framing = focus
-    ? {
-        transform:
-          "scale(2.35) translate(" +
-          (50 - focus[0] * 100) +
-          "%, " +
-          (50 - focus[1] * 100) +
-          "%)",
-      }
-    : undefined;
+  useLayoutEffect(() => {
+    if (!art.current || !interactive) return;
+    const update = () => project.current?.();
+    const observer = new ResizeObserver(update);
+    observer.observe(art.current);
+    update();
+    return () => observer.disconnect();
+  }, [key, painted?.src, points, project, interactive]);
+  const place = (id: string) => ({
+    left: positions![id][0] * 100 + "%",
+    top: positions![id][1] * 100 + "%",
+  });
+  const alt =
+    selected && selected.part !== "lens"
+      ? parts[selected.part].name + "的产品设计特写"
+      : key === "frame-inside"
+        ? "右镜腿透视展示主板与惯性传感器"
+        : key === "clip-inside"
+          ? "夹片剖面展示主板和电池"
+          : clip
+            ? "智能夹片装在普通镜框上"
+            : wear === "open"
+              ? "无镜片一体镜"
+              : "LumiRead 烟灰色智能学习眼镜";
+  const requested = {
+    src: src + ".webp",
+    srcSet:
+      whole && interactive
+        ? src + ".webp 1440w, " + src + "@2x.webp 2880w"
+        : undefined,
+    sizes:
+      selected || chapter !== "top" ? "(max-width: 700px) 96vw, 60vw" : "100vw",
+    alt,
+  };
+  const waiting = painted && painted.src !== requested.src;
+  const images = waiting ? [painted, requested] : [requested];
   return (
-    <div className="lr-poster">
-      <div className="lr-poster-art" style={framing}>
-        <img
-          src={"/products/" + key + ".webp"}
-          alt={
-            {
-              clip: "智能夹片装在普通眼镜上",
-              "frame-inside": "镜腿外壳透视，可见右侧主板和左侧电池",
-              "frame-open": "无镜片一体镜",
-              frame: "LumiRead 烟灰色智能学习眼镜",
-            }[key]
-          }
-          fetchPriority="high"
-        />
-        {interactive && positions && (
+    <div className="lr-poster" data-macro={!whole}>
+      <div className="lr-poster-art" ref={art}>
+        {images.map((image) => (
+          <img
+            key={image.src}
+            {...image}
+            hidden={waiting && image === requested}
+            fetchPriority="high"
+            onLoad={() => {
+              if (image === requested) {
+                setPainted(requested);
+              }
+            }}
+          />
+        ))}
+        {interactive && painted?.src === requested.src && positions && (
           <>
-            {["lens", "lens-other"].map(
+            {(!selected || selected.part === "lens") &&
+              ["lens", "lens-other"].map(
+                (id) =>
+                  positions[id] && (
+                    <button
+                      key={id}
+                      type="button"
+                      className="lr-empty-hit"
+                      data-return={"optic-" + id}
+                      aria-label="在镜圈处选择佩戴方式"
+                      style={place(id)}
+                      onClick={(e) => select({ part: "lens" }, e.currentTarget)}
+                    />
+                  ),
+              )}
+            {markers(chapter, clip, !!selected).map(
               (id) =>
                 positions[id] && (
                   <button
                     key={id}
                     type="button"
-                    className="lr-empty-hit"
-                    aria-label="在镜圈处选择佩戴方式"
-                    style={{
-                      left: positions[id][0] * 100 + "%",
-                      top: positions[id][1] * 100 + "%",
-                    }}
-                    onClick={() => select({ part: "lens" })}
-                  />
-                ),
-            )}
-            {markers(chapter, clip, !!selected).map(
-              (id) =>
-                positions[id] && (
-                  <button
                     className="lr-pin"
-                    key={id}
+                    data-return={"pin-" + id}
                     aria-label={parts[id].name + "热点"}
-                    style={{
-                      left: positions[id][0] * 100 + "%",
-                      top: positions[id][1] * 100 + "%",
-                    }}
-                    onClick={() => select({ part: id })}
+                    style={place(id)}
+                    onClick={(e) => select({ part: id }, e.currentTarget)}
                   >
                     <span aria-hidden="true">+</span>
                   </button>
                 ),
+            )}
+            {selected?.part === "tof" && positions.tof && (
+              <i
+                className="lr-range-origin"
+                style={place("tof")}
+                aria-hidden="true"
+              />
+            )}
+            {photographing && positions.led && (
+              <i
+                className="lr-poster-led"
+                style={place("led")}
+                aria-hidden="true"
+              />
             )}
           </>
         )}
@@ -220,13 +392,25 @@ function Poster({
 }
 
 export default function Showcase() {
-  const chapter = useChapter();
+  const { chapter, track } = useChapter();
+  const project = useRef<(() => void) | null>(null);
   const [wear, setWear] = useState<Wear>("blue");
   const [selected, setSelected] = useState<Selection | null>(null);
   const [catalog, setCatalog] = useState<Catalog>();
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
-  const [ready, setReady] = useState(false);
+  const [renderedUrl, setRenderedUrl] = useState("");
+  const surface = useRef<HTMLDivElement>(null);
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const capture = useCallback(() => {
+    clearTimeout(flashTimer.current);
+    setFlash(true);
+    flashTimer.current = setTimeout(() => setFlash(false), 850);
+  }, []);
+  useEffect(() => () => clearTimeout(flashTimer.current), []);
   const [failed, setFailed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [hidden, setHidden] = useState(document.hidden);
@@ -237,6 +421,7 @@ export default function Showcase() {
   const dialog = useRef<HTMLDialogElement>(null);
   const picker = useRef<HTMLButtonElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  const returnOnClose = useRef(false);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const clip = wear === "clip";
   const group = partGroups(clip);
@@ -246,7 +431,7 @@ export default function Showcase() {
     focusedPart === "lens" || (!selected && chapter === "explore");
   const light = optical || (!selected && chapter === "specifications");
   const activeChapter = chapters.find((s) => s.id === chapter)!;
-  const sceneReady = useCallback(() => setReady(true), []);
+  const sceneReady = useCallback((url: string) => setRenderedUrl(url), []);
   const sceneFailed = useCallback(() => setFailed(true), []);
   const pause = useCallback(() => setPaused(true), []);
   const rotate = !paused && !hidden && !reduced && !selected && !indexOpen;
@@ -278,27 +463,67 @@ export default function Showcase() {
   }, [selected]);
 
   const select = useCallback(
-    (item: Selection) => {
+    (item: Selection, trigger?: HTMLElement) => {
       if (!selected)
         previousFocus.current =
-          document.activeElement instanceof HTMLElement
+          trigger ??
+          (document.activeElement instanceof HTMLElement
             ? document.activeElement
-            : null;
+            : null);
       dialog.current?.close();
       setSelected(item);
+      if (item.part === "camera") capture();
     },
-    [selected],
+    [selected, capture],
   );
   const back = useCallback(() => {
+    returnOnClose.current = true;
     setSelected(null);
-    const old = previousFocus.current;
-    requestAnimationFrame(() => {
-      (old?.isConnected && old !== document.body && !old.closest("dialog")
-        ? old
-        : picker.current
-      )?.focus({ preventScroll: true });
-    });
   }, []);
+  useLayoutEffect(() => {
+    if (selected || !returnOnClose.current) return;
+    returnOnClose.current = false;
+    const old = previousFocus.current;
+    const fallback = picker.current;
+    const stage = fallback?.closest(".lr-stage");
+    if (!fallback || !stage) return;
+    const key = old?.dataset.return;
+    const selector = key && '[data-return="' + CSS.escape(key) + '"]';
+    const restore = () => {
+      const target =
+        old?.isConnected && old !== document.body
+          ? old
+          : selector
+            ? stage.querySelector<HTMLElement>(selector)
+            : null;
+      if (!target || target.hidden) return false;
+      target.focus({ preventScroll: true });
+      return document.activeElement === target;
+    };
+    if (!old?.closest("dialog") && restore()) return;
+    fallback.focus({ preventScroll: true });
+    const expectedPin = markers(chapter, clip, false).some(
+      (id) => key === "pin-" + id,
+    );
+    if (!expectedPin && !key?.startsWith("optic-")) return;
+    // The return flight or a decoded poster may make the originating control available later.
+    const observer = new MutationObserver(() => {
+      if (document.activeElement !== fallback || restore())
+        observer.disconnect();
+    });
+    observer.observe(stage, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["hidden"],
+    });
+    const stop = () => observer.disconnect();
+    fallback.addEventListener("blur", stop, { once: true });
+    return () => {
+      observer.disconnect();
+      fallback.removeEventListener("blur", stop);
+    };
+  }, [selected, chapter, clip]);
   useEffect(() => {
     const escape = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape" && selected && !dialog.current?.open) back();
@@ -318,7 +543,9 @@ export default function Showcase() {
     event.preventDefault();
     setSelected(null);
     if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
-    document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: reduced ? "instant" : "smooth" });
   };
   const onIndexKey = (event: KeyboardEvent<HTMLDialogElement>) => {
     if (event.key === "Escape") event.stopPropagation();
@@ -328,6 +555,11 @@ export default function Showcase() {
   const assistant = room
     ? "/legacy-app?room=" + encodeURIComponent(room)
     : catalog?.assistant_path || "/app";
+  const assistantLink = (
+    <a className="lr-assistant" href={assistant}>
+      进入学习助手
+    </a>
+  );
   const frameProduct = catalog?.products.find((p) => p.sku === "frame");
   const clipProduct = catalog?.products.find((p) => p.sku === "clip");
   const next = chapters[chapters.findIndex((c) => c.id === chapter) + 1];
@@ -336,39 +568,23 @@ export default function Showcase() {
     : focusedPart
       ? parts[focusedPart].name
       : "";
-  const showPoster = failed || !ready;
+  const frameUrl = frameProduct?.model_url || "/products/frame.glb",
+    clipUrl = clipProduct?.model_url || "/products/clip.glb";
+  const ready = renderedUrl === (clip ? clipUrl : frameUrl);
+  const showingModel = ready && !failed;
+  const chooseWear = (next: Wear) => {
+    if ((next === "clip") !== clip) setRenderedUrl("");
+    setWear(next);
+  };
+  useLayoutEffect(() => {
+    if (!ready || failed)
+      surface.current?.setAttribute("aria-busy", String(!failed));
+  }, [ready, failed]);
+  const photographing = flash && focusedPart === "camera";
 
   return (
     <div className="lr-show" data-light={light}>
-      <nav className="lr-nav" aria-label="产品导航">
-        <div className="lr-nav-inner">
-          <a
-            className="lr-brand"
-            href="#top"
-            aria-label="LumiRead 产品首页"
-            onClick={(e) => go(e, "top")}
-          >
-            <BookMark />
-            <b>LumiRead</b>
-          </a>
-          <div className="lr-nav-links">
-            <a href="/">护眼手册</a>
-            {chapters.map((s) => (
-              <a
-                key={s.id}
-                href={"#" + s.id}
-                aria-current={chapter === s.id ? "location" : undefined}
-                className={
-                  s.id === "specifications" ? "lr-price-link" : undefined
-                }
-                onClick={(e) => go(e, s.id)}
-              >
-                {s.id === "specifications" ? "查看价格" : s.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <ProductNav chapter={chapter} go={go} />
       <main className="lr-main" aria-label="LumiRead 产品展示">
         <div
           className="lr-stage"
@@ -385,9 +601,18 @@ export default function Showcase() {
                 <span className="lr-wordmark">LumiRead</span>
                 <span className="lr-hero-name">智能学习眼镜</span>
               </h1>
+              <div className="lr-hero-intro">
+                <p className="lr-concept">无屏眼镜概念设计</p>
+                <p>
+                  留意读写距离与光线，
+                  <br />
+                  拍下眼前的作业。
+                </p>
+              </div>
             </header>
             <div
               className="lr-surface"
+              ref={surface}
               role="region"
               aria-label="交互眼镜模型"
               aria-description={
@@ -399,22 +624,25 @@ export default function Showcase() {
               aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
               data-renderer={failed ? "poster" : ready ? "webgl" : "loading"}
             >
-              {showPoster && (
-                <Poster
-                  wear={wear}
-                  chapter={chapter}
-                  selected={selected}
-                  interactive={failed}
-                  select={select}
-                />
-              )}
+              <Poster
+                wear={wear}
+                chapter={showingModel ? "top" : chapter}
+                selected={showingModel ? null : selected}
+                interactive={failed}
+                photographing={photographing}
+                project={project}
+                select={select}
+              />
               {!failed && (
                 <Suspense fallback={null}>
                   <Viewer
-                    frameUrl={frameProduct?.model_url || "/products/frame.glb"}
-                    clipUrl={clipProduct?.model_url || "/products/clip.glb"}
+                    frameUrl={frameUrl}
+                    clipUrl={clipUrl}
                     wear={wear}
-                    chapter={selected ? "top" : chapter}
+                    chapter={chapter}
+                    track={track}
+                    project={project}
+                    photographing={photographing}
                     selected={selected}
                     rotate={rotate}
                     reduced={reduced}
@@ -431,7 +659,8 @@ export default function Showcase() {
               <button
                 type="button"
                 className="lr-lens-prompt"
-                onClick={() => select({ part: "lens" })}
+                data-return="wear-prompt"
+                onClick={(e) => select({ part: "lens" }, e.currentTarget)}
               >
                 <span className="lr-prompt-plus" aria-hidden="true">
                   +
@@ -454,7 +683,7 @@ export default function Showcase() {
                     <h2 ref={detailHeading} tabIndex={-1}>
                       三种佩戴方式
                     </h2>
-                    <LensOptions wear={wear} choose={setWear} />
+                    <LensOptions wear={wear} choose={chooseWear} />
                   </>
                 ) : focusedPart ? (
                   <>
@@ -467,88 +696,98 @@ export default function Showcase() {
                     <p className="lr-description">
                       {explanation(focusedPart, clip)}
                     </p>
-                    {exposedTemple(focusedPart) && (
+                    {sensors.includes(focusedPart) && (
+                      <>
+                        <SensingPaper
+                          part={focusedPart}
+                          photographing={photographing}
+                          capture={capture}
+                        />
+                        {focusedPart === "camera" ? (
+                          <a className="lr-inline-link" href={assistant}>
+                            进入学习助手 <span aria-hidden="true">↗</span>
+                          </a>
+                        ) : (
+                          <p className="lr-source-note">
+                            学习助手中的距离与照度回放来自 Clouclip
+                            成人佩戴记录。
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {(focusedPart === "eye" || focusedPart === "imu") && (
+                      <>
+                        <a className="lr-inline-link" href="/#reading">
+                          观看研究样片 <span aria-hidden="true">↗</span>
+                        </a>
+                        <p className="lr-source-note">
+                          当前演示使用 Meta RitW
+                          成人研究录像。样机的识别表现仍待验证。
+                        </p>
+                      </>
+                    )}
+                    {!clip && exposedShell(focusedPart, false) && (
                       <PartLinks
                         items={
                           focusedPart === "board"
-                            ? ["battery"]
+                            ? ["imu", "radio", "battery"]
                             : focusedPart === "battery"
-                              ? ["board"]
-                              : ["board", "battery"]
+                              ? ["charge", "board"]
+                              : focusedPart === "temple-left"
+                                ? ["battery", "charge"]
+                                : ["board", "imu", "battery"]
                         }
                         pick={select}
                       />
                     )}
-                    {focusedPart === "clamp" && (
-                      <PartLinks items={["pad", "button"]} pick={select} />
-                    )}
+                    {clip &&
+                      (focusedPart === "clamp" ||
+                        focusedPart === "clip-core") && (
+                        <PartLinks
+                          items={
+                            focusedPart === "clamp"
+                              ? ["clip-core", "button"]
+                              : ["radio", "charge", "clamp"]
+                          }
+                          pick={select}
+                        />
+                      )}
                   </>
                 ) : chapter === "sensing" ? (
                   <>
                     <p className="lr-kicker">学习感知</p>
-                    <h2>
-                      眼镜如何感知
-                      <br />
-                      读写环境
-                    </h2>
+                    <h2>眼前的一页作业</h2>
                     <p className="lr-description">
-                      {clip
-                        ? "摄像头、测距和测光窗口，都在银色模块正面。"
-                        : "两侧看纸面与光线，鼻梁中央测量阅读距离。"}
+                      点选窗口，看眼镜怎样测距、感知明暗，或拍下这道题。
                     </p>
-                    <PartLinks
-                      items={["camera", "tof", "light"]}
-                      pick={select}
-                    />
+                    <SensingPaper photographing={false} capture={capture} />
+                    <PartLinks items={sensors} pick={select} />
                   </>
                 ) : chapter === "construction" ? (
                   <>
-                    <p className="lr-kicker">佩戴结构</p>
+                    <p className="lr-kicker">
+                      {clip ? "智能夹装模块" : "一体式全框眼镜"} · 佩戴结构
+                    </p>
                     <h2>
-                      {clip ? (
-                        <>
-                          夹扣如何固定
-                          <br />
-                          在镜框上
-                        </>
-                      ) : (
-                        <>
-                          镜腿里的
-                          <br />
-                          主板与电池
-                        </>
-                      )}
+                      {clip ? "夹片里的主板与电池" : "沿着镜腿，看进内部"}
                     </h2>
                     <p className="lr-description">
                       {clip
-                        ? "弹簧提供夹持力，内侧硅胶垫贴住自己的镜框。"
-                        : "点一侧镜腿，看外壳下的电路与供电结构。"}
+                        ? "可拆机身里，主板与电池避开了后方的弹簧转轴。"
+                        : "右侧镜腿已展开透视。电路藏在这里，眼动摄像头则朝向镜圈内侧。"}
                     </p>
                     <PartLinks
                       items={
                         clip
-                          ? ["clamp", "pad", "button"]
-                          : ["temple-right", "temple-left"]
+                          ? ["clip-core", "clamp", "button"]
+                          : ["temple-right", "temple-left", "eye"]
                       }
                       pick={select}
                     />
-                    {clip ? (
+                    {clip && (
                       <p className="lr-spec-note">
                         夹装模块目标重量约 {clipProduct?.weight_g ?? 13} g
                       </p>
-                    ) : (
-                      <dl className="lr-dimensions">
-                        {[
-                          ["129", "镜框宽"],
-                          ["41", "镜框高"],
-                          ["136", "镜腿长"],
-                        ].map(([n, label]) => (
-                          <div key={label}>
-                            <dt>{label}</dt>
-                            <dd>约 {n} mm</dd>
-                          </div>
-                        ))}
-                      </dl>
                     )}
                   </>
                 ) : (
@@ -556,23 +795,75 @@ export default function Showcase() {
                     <p className="lr-kicker">概念拟定价</p>
                     <h2>型号与价格</h2>
                     {catalog && frameProduct && clipProduct ? (
-                      <dl className="lr-prices">
-                        <div>
-                          <dt>一体镜</dt>
-                          <dd>{money(frameProduct.price_cny)}</dd>
+                      <>
+                        <table
+                          className="lr-compare"
+                          aria-label="两款眼镜功能对照"
+                        >
+                          <thead>
+                            <tr>
+                              <th scope="col">规格</th>
+                              <th scope="col">一体镜</th>
+                              <th scope="col">智能夹片</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <th scope="row">拟定价</th>
+                              <td>{money(frameProduct.price_cny)}</td>
+                              <td>{money(clipProduct.price_cny)}</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">读写感知</th>
+                              <td colSpan={2}>测距、测光、拍作业</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">拍摄操作</th>
+                              <td>双击镜腿</td>
+                              <td>按顶部按键</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">阅读识别设计</th>
+                              <td>眼动与头动</td>
+                              <td aria-label="夹片未配置眼动模组">—</td>
+                            </tr>
+                            <tr>
+                              <th scope="row">佩戴方式</th>
+                              <td>无镜片或平光</td>
+                              <td>保留原有镜片</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div className="lr-service">
+                          <div className="lr-family-price">
+                            <span>家庭学习服务</span>
+                            <b>
+                              {money(catalog.subscription_cny)}{" "}
+                              <small>/ 年</small>
+                            </b>
+                          </div>
+                          {assistantLink}
                         </div>
-                        <div>
-                          <dt>智能夹片</dt>
-                          <dd>{money(clipProduct.price_cny)}</dd>
-                        </div>
-                        <div>
-                          <dt>家庭学习服务</dt>
-                          <dd>
-                            {money(catalog.subscription_cny)}
-                            <small> / 年</small>
-                          </dd>
-                        </div>
-                      </dl>
+                        <details className="lr-size-note">
+                          <summary>眼镜与学习助手怎样分工</summary>
+                          <p>
+                            两款眼镜都规划了传感器、主板、天线与电池。距离和光照提醒、作业批改与讲解由学习助手处理。阅读识别还需要同步眼动、头动和前向画面，因此只列入一体镜设计。
+                          </p>
+                          <p>
+                            当前的读写距离与照度来自 Clouclip
+                            成人佩戴记录，阅读样片来自 Meta RitW
+                            成人研究。样机的测量精度与识别效果仍待实测。
+                          </p>
+                        </details>
+                        <details className="lr-size-note">
+                          <summary>尺寸与材料</summary>
+                          <p>
+                            一体镜约宽 129 mm、高 41 mm，镜腿长 136
+                            mm。烟灰色镜框搭配金属铰链。镁合金夹片目标重量约{" "}
+                            {clipProduct.weight_g ?? 13} g。
+                          </p>
+                        </details>
+                      </>
                     ) : (
                       <div className="lr-catalog-state">
                         <p role={error ? "alert" : "status"}>
@@ -586,14 +877,20 @@ export default function Showcase() {
                             重新读取产品
                           </button>
                         )}
+                        {assistantLink}
                       </div>
                     )}
-                    <a className="lr-assistant" href={assistant}>
-                      进入学习助手
-                    </a>
                   </>
                 )}
               </section>
+            )}
+            {focusedPart === "tof" && <RangeLine project={project} />}
+            {!selected && (
+              <div className="lr-rail" aria-hidden="true">
+                {chapters.map((c) => (
+                  <i key={c.id} data-active={c.id === chapter} />
+                ))}
+              </div>
             )}
             <div className="lr-stage-foot">
               {next ? (

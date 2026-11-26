@@ -3323,6 +3323,9 @@
             "type": "integer",
             "title": "Ticks Per Point"
           },
+          "score_policy": {
+            "$ref": "#/components/schemas/ScorePolicy"
+          },
           "clips": {
             "items": {
               "$ref": "#/components/schemas/MonitorClip"
@@ -3335,6 +3338,7 @@
         "required": [
           "rule_version",
           "ticks_per_point",
+          "score_policy",
           "clips"
         ],
         "title": "Monitor"
@@ -4487,6 +4491,81 @@
           "samples"
         ],
         "title": "Samples"
+      },
+      "ScorePolicy": {
+        "properties": {
+          "max_points": {
+            "type": "integer",
+            "title": "Max Points"
+          },
+          "settlement_seconds": {
+            "type": "integer",
+            "title": "Settlement Seconds"
+          },
+          "rest_grace_seconds": {
+            "type": "integer",
+            "title": "Rest Grace Seconds"
+          },
+          "full_rest_seconds": {
+            "type": "integer",
+            "title": "Full Rest Seconds"
+          },
+          "rest_points_per_second": {
+            "type": "string",
+            "title": "Rest Points Per Second"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreTier"
+            },
+            "type": "array",
+            "title": "Tiers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "max_points",
+          "settlement_seconds",
+          "rest_grace_seconds",
+          "full_rest_seconds",
+          "rest_points_per_second",
+          "tiers"
+        ],
+        "title": "ScorePolicy"
+      },
+      "ScoreTier": {
+        "properties": {
+          "categories": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "phone",
+                "video",
+                "tablet",
+                "computer",
+                "paper",
+                "other_text"
+              ]
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "minutes_to_reminder": {
+            "type": "integer",
+            "title": "Minutes To Reminder"
+          },
+          "points_per_settlement": {
+            "type": "string",
+            "title": "Points Per Settlement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "minutes_to_reminder",
+          "points_per_settlement"
+        ],
+        "title": "ScoreTier"
       },
       "ScoredClip": {
         "properties": {

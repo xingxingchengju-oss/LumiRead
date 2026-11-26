@@ -1,10 +1,13 @@
 import {
+  Box3,
+  CanvasTexture,
   Color,
   DoubleSide,
   Material,
   Mesh,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
+  MeshStandardMaterial,
   Object3D,
   PlaneGeometry,
   PMREMGenerator,
@@ -12,19 +15,23 @@ import {
   Vector3,
   type WebGLRenderer,
 } from "three";
-import {
-  exposedTemple,
-  isPart,
-  type Chapter,
-  type Part,
-  type Selection,
-  type Wear,
-} from "./product";
+import { type Chapter, type Part, type Wear } from "./product";
 
 export function studioEnvironment(gl: WebGLRenderer) {
   const room = new Scene();
-  room.background = new Color(0x787b80);
+  room.background = new Color(0x111219);
   const panel = new PlaneGeometry();
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 128;
+  const ctx = canvas.getContext("2d")!;
+  ctx.translate(64, 64);
+  const glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 65);
+  glow.addColorStop(0, "#fff");
+  glow.addColorStop(0.72, "#f1f1f1");
+  glow.addColorStop(1, "#000");
+  ctx.fillStyle = glow;
+  ctx.fillRect(-64, -64, 128, 128);
+  const diffusion = new CanvasTexture(canvas);
   const lamps: MeshBasicMaterial[] = [];
   function softbox(
     x: number,
@@ -36,6 +43,7 @@ export function studioEnvironment(gl: WebGLRenderer) {
   ) {
     const lamp = new MeshBasicMaterial({
       color: new Color(...rgb),
+      map: diffusion,
       side: DoubleSide,
       toneMapped: false,
     });
@@ -46,214 +54,274 @@ export function studioEnvironment(gl: WebGLRenderer) {
     card.lookAt(0, 0, 0);
     room.add(card);
   }
-  softbox(-2.5, 3.3, 2.3, 5.5, 1.15, [7.0, 7.2, 7.6]);
-  softbox(3.5, 1.2, 1.2, 1.0, 4.0, [4.6, 4.3, 3.9]);
-  softbox(0.5, 1.9, -3.5, 5.0, 0.72, [6.5, 7.0, 7.8]);
-  softbox(-0.65, 0.62, 3.6, 3.25, 0.19, [4.0, 3.8, 3.5]);
+  softbox(-2.0, 3.2, 1.7, 6.2, 1.25, [13, 14, 16]);
+  softbox(2.9, 1.2, 1.8, 1.65, 3.9, [7.4, 6.7, 5.8]);
+  softbox(-1, 1.6, -3.1, 6.0, 1.05, [11, 12, 15]);
+  softbox(-0.4, 0.1, 3.9, 3.6, 0.34, [5.1, 5.4, 5.7]);
+  softbox(-2.4, -1.2, -1.0, 2.7, 0.8, [1.25, 1.1, 1.0]);
   const pmrem = new PMREMGenerator(gl);
-  const light = pmrem.fromScene(room, 0.035);
+  const light = pmrem.fromScene(room, 0);
   panel.dispose();
+  diffusion.dispose();
   lamps.forEach((m) => m.dispose());
   pmrem.dispose();
   return light;
 }
 
-function taggedPart(mesh: Object3D) {
-  for (let item: Object3D | null = mesh; item; item = item.parent) {
-    if (isPart(item.userData.part)) return item.userData.part;
-  }
-}
-
-export function prepareModel(asset: Object3D) {
+export type Shell = "temple-left" | "temple-right" | "shell";
+export function prepareModel(asset: Object3D, clip: boolean) {
   const root = asset.clone(true);
   const hits: Mesh[] = [];
-  const tags = new Map<Object3D, Part>();
-  const anchors = new Map<Part, Object3D>();
-  const roles = new Map<string, Object3D>();
-  const optics = new Set<Material>();
-  const inside: { mesh: Mesh; part: Part }[] = [];
-  const shells = new Map<
-    Material,
-    {
-      part: Part;
-      opacity: number;
-      transparent: boolean;
-      depthWrite: boolean;
-      transmission: number;
-    }
-  >();
-  const copies = new Map<string, Material>();
+  const tags = new Map<Object3D, string>(),
+    anchors = new Map<string, Object3D>(),
+    roles = new Map<string, Object3D>();
+  const copies = new Map<string, Material>(),
+    lenses = new Set<Material>(),
+    lamps = new Set<MeshStandardMaterial>();
+  const shells: {
+    mat: Material;
+    side: Shell;
+    opacity: number;
+    depthWrite: boolean;
+  }[] = [];
+  const inside: { mesh: Mesh; side: Shell }[] = [];
   root.traverse((node) => {
-    if (isPart(node.userData.anchor)) anchors.set(node.userData.anchor, node);
-    if (typeof node.userData.role === "string")
-      roles.set(node.userData.role, node);
+    if (node.userData.anchor) anchors.set(node.userData.anchor, node);
+    if (node.userData.role) roles.set(node.userData.role, node);
     if (!(node instanceof Mesh)) return;
-    const part = taggedPart(node);
-    if (!part) return;
+    let raw: string | undefined;
+    for (
+      let parent: Object3D | null = node;
+      parent && !raw;
+      parent = parent.parent
+    )
+      raw = parent.userData.part;
+    if (!raw) return;
     hits.push(node);
-    tags.set(node, part);
-    if (part === "board" || part === "battery")
-      inside.push({ mesh: node, part });
-    if (part !== "lens" && part !== "temple-right" && part !== "temple-left")
-      return;
-    const copy = (original: Material) => {
-      const key = part + original.uuid;
-      const existing = copies.get(key);
-      if (existing) return existing;
-      const m = original.clone();
-      copies.set(key, m);
-      if (part === "lens") optics.add(m);
-      else
-        shells.set(m, {
-          part,
-          opacity: m.opacity,
-          transparent: m.transparent,
-          depthWrite: m.depthWrite,
-          transmission: m instanceof MeshPhysicalMaterial ? m.transmission : 0,
+    tags.set(node, raw);
+    const side = clip
+      ? raw === "clip-core"
+        ? "shell"
+        : null
+      : raw === "battery"
+        ? "temple-left"
+        : ["board", "imu", "radio"].includes(raw)
+          ? "temple-right"
+          : null;
+    if (side) {
+      inside.push({ mesh: node, side });
+      node.visible = false;
+    }
+    const shell = clip
+      ? raw === "shell"
+      : raw === "temple-left" || raw === "temple-right";
+    if (!shell && raw !== "lens" && raw !== "led") return;
+    function clone(original: Material) {
+      const key = raw + original.uuid;
+      const known = copies.get(key);
+      if (known) return known;
+      const mat = original.clone();
+      copies.set(key, mat);
+      if (shell) {
+        shells.push({
+          mat,
+          side: raw as Shell,
+          opacity: mat.opacity,
+          depthWrite: mat.depthWrite,
         });
-      return m;
-    };
+        // Keep one shader variant through the entire cutaway.
+        mat.transparent = true;
+        mat.forceSinglePass = true;
+      }
+      if (raw === "lens") {
+        lenses.add(mat);
+        mat.depthWrite = false;
+        if (mat instanceof MeshPhysicalMaterial) {
+          mat.ior = 1.54;
+          mat.metalness = 0;
+          mat.roughness = 0.038;
+          mat.iridescence = clip ? 0 : 0.38;
+          mat.iridescenceIOR = 1.34;
+          mat.iridescenceThicknessRange = [220, 360];
+        }
+      }
+      if (
+        raw === "led" &&
+        mat instanceof MeshStandardMaterial &&
+        mat.name.includes("Sea-glass")
+      ) {
+        mat.emissive.set(0x74ffd6);
+        mat.emissiveIntensity = 0;
+        lamps.add(mat);
+      }
+      return mat;
+    }
     node.material = Array.isArray(node.material)
-      ? node.material.map(copy)
-      : copy(node.material);
+      ? node.material.map(clone)
+      : clone(node.material);
   });
   root.updateMatrixWorld(true);
+  const bounds = new Box3().setFromObject(root).expandByScalar(0.08);
+  if (clip) {
+    // Include the module's raised position during installation.
+    bounds.max.y += 0.23;
+    bounds.max.z += 0.1;
+  }
   const atRest = new Map(
     [...anchors].map(([id, node]) => [
       id,
       node.getWorldPosition(new Vector3()),
     ]),
   );
+  let currentShell: Shell | null = null,
+    currentWeight = -1;
+  function section(shell: Shell | null, weight: number) {
+    if (shell === currentShell && weight === currentWeight) return;
+    currentShell = shell;
+    currentWeight = weight;
+    for (const item of inside)
+      item.mesh.visible = item.side === shell && weight > 0.01;
+    for (const s of shells) {
+      const t = s.side === shell ? weight : 0;
+      s.mat.depthWrite = t > 0.001 ? false : s.depthWrite;
+      s.mat.opacity = s.opacity * (1 - t) + 0.055 * t;
+    }
+  }
   return {
     root,
+    bounds,
     hits,
     tags,
     anchors,
-    atRest,
     roles,
-    optics,
-    inside,
-    shells,
+    atRest,
+    lenses,
+    lamps,
     copies,
+    section,
   };
 }
 export type Model = ReturnType<typeof prepareModel>;
-
-export function opticsAndInterior(model: Model, wear: Wear, part?: Part) {
-  model.optics.forEach((mat) => {
-    mat.visible = wear !== "open";
-  });
-  const side = exposedTemple(part);
-  model.inside.forEach(({ mesh, part: component }) => {
-    mesh.visible = side === exposedTemple(component);
-  });
-  model.shells.forEach((original, mat) => {
-    const seeInside = original.part === side;
-    if (mat instanceof MeshPhysicalMaterial)
-      mat.transmission = seeInside ? 0 : original.transmission;
-    const transparent = seeInside || original.transparent;
-    if (mat.transparent !== transparent) {
-      mat.transparent = transparent;
-      mat.needsUpdate = true;
-    }
-    mat.depthWrite = seeInside ? false : original.depthWrite;
-  });
-}
-
 export type Pose = {
   target: Vector3;
   yaw: number;
   pitch: number;
   roll: number;
-  width: number;
-  height: number;
+  distance: number;
+  x: number;
+  y: number;
 };
-const pose = (
-  target: Vector3,
-  yaw: number,
-  pitch: number,
-  width: number,
-  height: number,
-  roll = 0,
-): Pose => ({ target, yaw, pitch, roll, width, height });
-const center = (x = 0, y = 0, z = -0.57) => new Vector3(x, y, z);
-const anchor = (model: Model, id: Part) =>
-  model.atRest.get(id)?.clone() ?? center();
-
 export function cameraPose(
   model: Model,
   chapter: Chapter,
   wear: Wear,
-  selected: Selection | null,
-  compact: boolean,
+  part: Part | undefined,
+  width: number,
+  height: number,
 ): Pose {
-  const clip = wear === "clip";
-  const id = selected?.part;
-  if (clip && (id === "lens" || (!id && chapter === "explore")))
-    return pose(center(0, 0.01, -0.66), -1.16, 0.38, 2.02, 0.88);
-  if (id === "lens")
-    return pose(center(0, 0.035, -0.23), 0.2, 0.14, 1.64, 0.71);
-  if (!id) {
-    if (chapter === "explore")
-      return pose(center(0, 0.04, -0.3), 0.23, 0.15, 1.77, 0.77);
+  const mobile = width <= 700,
+    clip = wear === "clip",
+    hero = chapter === "top" && !part;
+  const anchor = (id: string) =>
+    model.atRest.get(id)?.clone() ?? new Vector3(0, 0, -0.38);
+  const center = (x = 0, y = 0, z = -0.45) => new Vector3(x, y, z);
+  const frame = (
+    target: Vector3,
+    yaw: number,
+    pitch: number,
+    span: number,
+    tall: number,
+    roll = 0,
+  ): Pose => {
+    const boardCenter =
+      !mobile && (part === "temple-right" || part === "temple-left");
+    const fx = hero ? (mobile ? 0.96 : 0.85) : mobile ? 0.92 : 0.54;
+    const fy = hero ? 0.53 : mobile ? 0.35 : 0.72;
+    const distance =
+      Math.max(span / ((fx * width) / height), tall / fy) /
+      (2 * Math.tan(Math.PI / 15)); // Half the 24° vertical field of view.
+    return {
+      target,
+      yaw,
+      pitch,
+      roll,
+      distance,
+      x: mobile ? (hero ? 0.45 : 0.5) : hero || boardCenter ? 0.5 : 0.32,
+      y: hero ? (mobile ? 0.52 : 0.5) : mobile ? 0.215 : 0.5,
+    };
+  };
+  if (!part || part === "lens") {
+    if (hero)
+      return frame(
+        center(0, 0, -0.43),
+        mobile ? 0.55 : 0.54,
+        mobile ? 0.34 : 0.23,
+        mobile ? 1.82 : 1.81,
+        0.67,
+        mobile ? -0.105 : -0.045,
+      );
+    if (chapter === "explore" || part === "lens")
+      return clip
+        ? frame(center(-0.15, 0.045, -0.32), -0.65, 0.34, 1.65, 0.68)
+        : frame(center(0, 0.015, -0.29), 0.31, 0.17, 1.65, 0.68);
     if (chapter === "sensing")
       return clip
-        ? pose(anchor(model, "tof"), 0.13, 0.13, 0.82, 0.43)
-        : pose(center(0, 0.055, -0.06), 0.09, 0.08, 1.57, 0.68);
+        ? frame(anchor("tof"), -0.1, 0.2, 0.63, 0.36)
+        : frame(center(0, 0.055, -0.045), 0.12, 0.13, 1.49, 0.61);
     if (chapter === "construction")
       return clip
-        ? pose(anchor(model, "clamp"), -2.42, 0.48, 1.06, 0.57)
-        : pose(center(0, 0.005, -0.63), 0.8, 0.34, 1.99, 0.91);
-    if (compact && chapter === "top")
-      return pose(center(0, 0, -0.61), 0.52, 0.25, 1.89, 0.79, -0.1);
-    return pose(center(0, -0.012, -0.58), 0.45, 0.095, 1.86, 0.73);
+        ? frame(anchor("clip-core"), -0.18, 0.32, 0.6, 0.36)
+        : frame(center(-0.36, 0.06, -0.49), -1.94, 0.39, 1.36, 0.72);
+    return frame(
+      center(0, 0, -0.38),
+      clip ? -0.38 : 0.55,
+      0.23,
+      1.78,
+      0.77,
+      -0.035,
+    );
   }
-  let target = anchor(model, id);
-  if (
-    selected?.point &&
-    (id === "rim" || id === "ear" || id === "hinge" || id === "nose")
-  )
-    target = new Vector3(...selected.point);
-  const side = target.x < 0 ? -1 : 1;
-  switch (id) {
-    case "camera":
-    case "led":
-      return pose(target, 0.18 * side, 0.12, clip ? 0.29 : 0.34, 0.22);
+  const a = anchor(part),
+    side = Math.sign(a.x) || 1;
+  switch (part) {
+    case "eye":
+      return frame(a, 2.73, 0.19, 0.22, 0.16);
     case "tof":
     case "light":
-      return pose(target, 0.16 * side, 0.085, clip ? 0.27 : 0.34, 0.21);
-    case "rim":
-      return pose(target, 0.32 * side, 0.17, 0.9, 0.52);
-    case "nose":
-      return pose(target, 2.85 * side, 0.13, 0.59, 0.4);
-    case "hinge":
-      return pose(target, 1.17 * side, 0.19, 0.43, 0.29);
-    case "ear":
-      return pose(target, 1.7 * side, 0.24, 0.68, 0.39);
+    case "camera":
+      return frame(a, side * 0.18, 0.16, clip ? 0.24 : 0.27, 0.18);
+    case "temple-right":
     case "board":
-    case "battery":
+      return frame(anchor("board"), -1.55, 0.17, 0.51, 0.3);
     case "temple-left":
-    case "temple-right": {
-      const inner = exposedTemple(id) === "temple-right" ? "board" : "battery";
-      return pose(anchor(model, inner), 1.44 * side, 0.36, 0.74, 0.41);
-    }
+    case "battery":
+      return frame(anchor("battery"), 1.53, 0.21, 0.52, 0.3);
+    case "imu":
+      return frame(a, -1.56, 0.14, 0.19, 0.14);
+    case "touch":
+      return frame(a, -1.49, 0.18, 0.35, 0.22);
+    case "radio":
+      return frame(a, clip ? 0.3 : -1.5, 0.16, clip ? 0.28 : 0.22, 0.18);
+    case "clip-core":
+      return frame(a, -0.15, 0.35, 0.55, 0.31);
+    case "charge":
+      return frame(a, clip ? 0.34 : 1.26, -0.83, 0.28, 0.18);
     case "clamp":
-    case "pad":
-      return pose(target, 2.7 * side, 0.45, 0.48, 0.31);
+      return frame(a, 2.82, 0.52, 0.46, 0.3);
     case "button":
-      return pose(target, 0.32 * side, 0.8, 0.46, 0.3);
-    case "shell":
-      return pose(target, 0.33 * side, 0.18, 0.76, 0.4);
+      return frame(a, 0.23, 0.86, 0.35, 0.24);
   }
 }
-
-export function shortenAngle(from: number, to: number) {
-  return from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
+export function mixPose(output: Pose, a: Pose, b: Pose, t: number) {
+  output.target.lerpVectors(a.target, b.target, t);
+  output.yaw =
+    a.yaw + Math.atan2(Math.sin(b.yaw - a.yaw), Math.cos(b.yaw - a.yaw)) * t;
+  for (const key of ["pitch", "roll", "distance", "x", "y"] as const)
+    output[key] = a[key] + (b[key] - a[key]) * t;
+  return output;
 }
-export function copyPose(p: Pose): Pose {
-  return { ...p, target: p.target.clone() };
-}
-export function ease(t: number) {
-  const n = Math.min(1, Math.max(0, t));
-  return n * n * (3 - 2 * n);
+export const copyPose = (p: Pose): Pose => ({ ...p, target: p.target.clone() });
+export function ease(v: number) {
+  const t = Math.max(0, Math.min(1, v));
+  return t * t * (3 - 2 * t);
 }

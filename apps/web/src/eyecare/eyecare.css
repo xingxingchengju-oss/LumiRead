@@ -350,6 +350,31 @@
 .ec-monitor-stats .ec-score {
   background: #1b4d40;
   color: #fff;
+  border: 0;
+  border-radius: 7px;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: normal;
+}
+.ec-score-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+.ec-score-top > span {
+  color: #e1ecd6;
+  font-size: 13px;
+}
+.ec-score-top b {
+  font-size: 18px;
+  line-height: 0;
+}
+.ec-score:hover .ec-score-top > span,
+.ec-score:focus-visible .ec-score-top > span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .ec-score progress {
   width: 100%;

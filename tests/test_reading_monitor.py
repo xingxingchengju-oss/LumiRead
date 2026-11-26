@@ -1,5 +1,6 @@
 import json
 from collections import Counter
+from fractions import Fraction
 from itertools import pairwise, repeat
 
 import pytest
@@ -7,7 +8,15 @@ from fastapi.testclient import TestClient
 
 from apps.api import eyecare
 from apps.api.main import app
-from apps.api.monitor import TICKS, decide, fuse, score, timeline, vote_patches
+from apps.api.monitor import (
+    SCORE_POLICY,
+    TICKS,
+    decide,
+    fuse,
+    score,
+    timeline,
+    vote_patches,
+)
 
 
 def sight(activity, medium):
@@ -65,8 +74,9 @@ def test_winner_rates_mixed_six_second_settlement_and_independent_clocks():
         + [("reading", "paper")] * 5
     )
     points, _ = score(states + [("video", "unknown")] * 6)
-    assert points[-7] == (14, 0, 168 + 28 + 5 * 21)
-    assert points[-1] == (14, 6, 168 + 28 + 5 * 21 + 168)
+    mixed_ticks = TICKS // 3 + TICKS // 18 + 5 * TICKS // 24
+    assert points[-7] == (14, 0, mixed_ticks)
+    assert points[-1] == (14, 6, mixed_ticks + TICKS // 3)
 
 
 @pytest.mark.parametrize(
@@ -74,10 +84,12 @@ def test_winner_rates_mixed_six_second_settlement_and_independent_clocks():
     [
         ("reading", "phone", 30),
         ("reading", "computer", 35),
+        ("reading", "tablet", 35),
         ("reading", "paper", 40),
         ("reading", "other_text", 40),
         ("video", "phone", 30),
         ("video", "computer", 30),
+        ("video", "unknown", 30),
     ],
 )
 def test_homogeneous_thresholds_and_saturation(activity, medium, minutes):
@@ -88,10 +100,13 @@ def test_homogeneous_thresholds_and_saturation(activity, medium, minutes):
 def test_simulated_long_record_and_interrupted_recovery():
     load = [("reading", "phone")] * 900 + [("reading", "paper")] * 1200
     rest = ("rest", "none")
-    points, events = score(load + [rest] * 360)
+    points, events = score(load + [rest] * 601)
     assert points[900][2] == 50 * TICKS and points[2100][2] == 100 * TICKS
     assert events == [2100] and points[2110][2] == 100 * TICKS
-    assert round(points[2112][2] / TICKS, 2) == 99.43 and points[-1] == (2100, 0, 0)
+    assert round(points[2112][2] / TICKS, 2) == 99.66
+    assert round(points[2460][2] / TICKS, 2) == 40.68
+    assert points[2699][2] == 10 * TICKS // 59
+    assert points[2700] == points[2701] == (2100, 0, 0)
     points, events = score(
         load
         + [rest] * 9
@@ -99,7 +114,10 @@ def test_simulated_long_record_and_interrupted_recovery():
         + [rest] * 11
         + [("video", "unknown")] * 6
     )
-    assert points[2120][2] == 100 * TICKS and points[2121][2] == 100 * TICKS - 144
+    assert (
+        points[2120][2] == 100 * TICKS
+        and points[2121][2] == 100 * TICKS - 10 * TICKS // 59
+    )
     assert events == [2100, 2127]
 
 
@@ -110,6 +128,21 @@ def test_published_monitor_and_held_out_results():
         data = response.json()
     assert [c["kind"] for c in data["clips"]] == ["paper", "digital"]
     report = json.loads((eyecare.RITW / "monitor-metrics.json").read_text())
+    assert data["rule_version"] == report["rule_version"] == "ritw-monitor-v2"
+    assert data["score_policy"] == SCORE_POLICY and data["ticks_per_point"] == TICKS
+    policy = data["score_policy"]
+    for tier in policy["tiers"]:
+        for category in tier["categories"]:
+            state = (
+                ("video", "unknown") if category == "video" else ("reading", category)
+            )
+            points, _ = score(repeat(state, policy["settlement_seconds"]))
+            assert Fraction(points[-1][2], TICKS) == Fraction(
+                tier["points_per_settlement"]
+            )
+    assert Fraction(policy["rest_points_per_second"]) == Fraction(
+        policy["max_points"], policy["full_rest_seconds"] - policy["rest_grace_seconds"]
+    )
     assert Counter(r["group"] for r in report["validation"]) == {
         "paper": 10,
         "digital": 5,
@@ -127,6 +160,12 @@ def test_published_monitor_and_held_out_results():
         assert any(a[2] < b[2] for a, b in pairwise(points))
         assert any(a[2] > b[2] for a, b in pairwise(points))
         assert report["selected"][clip["kind"]] == clip["id"]
+        start, expected = (
+            (203, [3.00, 2.32]) if clip["kind"] == "paper" else (189, [3.67, 2.99])
+        )
+        assert [
+            round(points[t - clip["start"]][2] / TICKS, 2) for t in (start, start + 7)
+        ] == expected
 
 
 def test_held_out_recalls_include_all_reference_seconds_and_abstentions():
@@ -158,6 +197,7 @@ def test_held_out_recalls_include_all_reference_seconds_and_abstentions():
         "900": 50,
         "2100": 100,
         "2110": 100,
-        "2112": 99.43,
-        "2460": 0,
+        "2112": 99.66,
+        "2460": 40.68,
+        "2700": 0,
     }

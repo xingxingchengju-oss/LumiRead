@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { existsSync } from "node:fs";
 import type { components } from "../../../packages/contracts/types";
 
@@ -91,6 +92,124 @@ test("both real videos drive seeking, evidence and scores on the source clock", 
     await page.keyboard.press("End");
     await expect.poll(time).toBeCloseTo(clip.end, 0);
   }
+});
+
+test("the offline score guide explains both verified breaks and returns keyboard focus", async ({
+  page,
+}) => {
+  const external: string[] = [];
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname !== "127.0.0.1") {
+      external.push(url.href);
+      return route.abort();
+    }
+    if (url.pathname.includes("/eye-care/preview/"))
+      return route.fulfill({ status: 404 });
+    return route.continue();
+  });
+  await page.goto("/#reading");
+  const card = page.getByRole("button", { name: /用眼提醒积分.*了解积分/ });
+  const guide = page.getByRole("dialog", { name: "了解用眼提醒积分" });
+  for (const [kind, start, before, after, width] of [
+    ["纸质阅读", "3:23", "3.00", "2.32", 1280],
+    ["电子阅读", "3:09", "3.67", "2.99", 390],
+  ] as const) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.getByRole("button", { name: kind, exact: true }).click();
+    const patch = page.getByRole("button", {
+      name: new RegExp("^" + start + " 休息"),
+    });
+    await patch.click();
+    await expect(card).toContainText(before);
+    await card.focus();
+    await page.keyboard.press("Enter");
+    const context = guide.getByRole("region", { name: "当前片段计分" });
+    await expect(context).toContainText(start);
+    await expect(context).toContainText(before + " → " + after);
+    await expect(context).toContainText("本段有 4 秒已过 10 秒缓冲");
+    await expect(context).toContainText("每秒减 10/59 分");
+    const rates = guide.getByRole("table", { name: "多久会提醒休息？" });
+    await expect(
+      rates.getByRole("row", { name: /平板阅读、\s*电脑阅读/ }),
+    ).toContainText("+2/7 分");
+    await expect(guide.locator("img")).toHaveJSProperty("naturalWidth", 1280);
+    await page.screenshot({
+      path: test.info().outputPath("guide-" + width + ".png"),
+    });
+    await guide.getByRole("button", { name: "阅读科普" }).click();
+    await expect(guide.locator("summary").first()).toBeFocused();
+    for (const title of ["专注看屏幕时", "什么时候抬头"]) {
+      await guide.locator("summary").filter({ hasText: title }).click();
+    }
+    await expect(
+      guide.getByRole("cell", { name: "38.40 ± 10.50" }),
+    ).toBeVisible();
+    await expect(guide.getByText(/20.8 次/)).toBeVisible();
+    await expect(guide.getByText(/15 分钟以内/)).toBeVisible();
+    await expect(guide.getByRole("link")).toHaveCount(4);
+    if (width === 390) {
+      await page.setViewportSize({ width: 320, height: 650 });
+      expect(
+        await guide.evaluate((el) =>
+          Math.abs(el.getBoundingClientRect().bottom - innerHeight),
+        ),
+      ).toBeLessThan(2);
+      expect(
+        await guide
+          .locator(".sg-content")
+          .evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+      const audit = await new AxeBuilder({ page })
+        .include(".ec-score-guide")
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+      expect(audit.violations.map((finding) => finding.id)).toEqual([]);
+    }
+    await page.keyboard.press("Escape");
+    await expect(guide).toHaveCount(0);
+    await expect(card).toBeFocused();
+    await expect(card).toContainText(before);
+    await expect(patch).toHaveAttribute("aria-pressed", "true");
+  }
+  expect(external).toEqual([]);
+});
+
+test("reading an article pauses a playing clip and restores its speed and source time", async ({
+  page,
+}) => {
+  const { clips }: Monitor = await (
+    await page.request.get("/api/v1/eye-care/monitor")
+  ).json();
+  const clip = clips[0];
+  test.skip(
+    !existsSync("../../.cache/ritw/sequences/" + clip.id + "/preview.mp4"),
+    "Requires local preview.",
+  );
+  await page.goto("/#reading");
+  const video = page.locator("video");
+  const time = () => video.evaluate((v: HTMLVideoElement) => v.currentTime);
+  await page.getByLabel("速度").selectOption("4");
+  await page.getByRole("button", { name: "播放", exact: true }).click();
+  await expect.poll(time).toBeGreaterThan(clip.start + 0.2);
+  const card = page.getByRole("button", { name: /用眼提醒积分.*了解积分/ });
+  await card.click();
+  const guide = page.getByRole("dialog");
+  await expect(guide).toBeVisible();
+  await expect(video).toHaveJSProperty("paused", true);
+  const stopped = await time();
+  await guide.locator("summary").first().click();
+  expect(await time()).toBe(stopped);
+  await guide.getByRole("button", { name: "关闭积分说明" }).click();
+  await expect(card).toBeFocused();
+  await expect(video).toHaveJSProperty("playbackRate", 4);
+  await expect.poll(time).toBeGreaterThan(stopped + 0.1);
+  await page.getByRole("button", { name: "暂停", exact: true }).click();
+  const paused = await time();
+  await card.click();
+  await page.keyboard.press("Escape");
+  await expect(video).toHaveJSProperty("paused", true);
+  expect(await time()).toBe(paused);
 });
 
 test("weekly report opens from the handbook and reuses its published text offline", async ({
@@ -214,6 +333,11 @@ test("a threshold reminder is announced once when replaying its source time", as
     page.getByRole("status").filter({ hasText: "提醒积分已达 100" }),
   ).toBeVisible();
   await expect(page.locator(".ec-score strong")).toContainText("100.00");
+  await page.getByRole("button", { name: /用眼提醒积分.*了解积分/ }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "关闭积分说明" })
+    .click();
   await page.getByRole("button", { name: "暂停", exact: true }).click();
   await page.locator(".ec-patches button").first().click();
   await page.getByRole("button", { name: "播放", exact: true }).click();

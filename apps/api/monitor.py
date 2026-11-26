@@ -1,6 +1,8 @@
-"""Reading-monitor decisions on the source-video clock. One tick is 1/504 point."""
+"""Reading-monitor decisions and exact reminder scores on the source-video clock."""
 
 from collections import Counter
+from fractions import Fraction
+from math import lcm
 from typing import Literal
 
 from typing_extensions import TypedDict
@@ -11,17 +13,62 @@ Medium = Literal[
 ]
 Kind = Literal["paper", "digital"]
 PATCH_SECONDS = 7
-TICKS = 504
-RULE = "ritw-monitor-v1"
-# Per effective second. Every six active seconds post their combined ticks.
-READ_RATE = {
-    "phone": 28,
-    "computer": 24,
-    "paper": 21,
-    "other_text": 21,
-    "tablet": 21,
+RULE = "ritw-monitor-v2"
+ScoreCategory = Literal["phone", "video", "tablet", "computer", "paper", "other_text"]
+
+
+class ScoreTier(TypedDict):
+    categories: list[ScoreCategory]
+    minutes_to_reminder: int
+    points_per_settlement: str
+
+
+class ScorePolicy(TypedDict):
+    max_points: int
+    settlement_seconds: int
+    rest_grace_seconds: int
+    full_rest_seconds: int
+    rest_points_per_second: str
+    tiers: list[ScoreTier]
+
+
+MAX_POINTS = 100
+SETTLEMENT_SECONDS = 6
+REST_GRACE_SECONDS = 10
+FULL_REST_SECONDS = 600
+REST_RATE = Fraction(MAX_POINTS, FULL_REST_SECONDS - REST_GRACE_SECONDS)
+
+
+def _tier(minutes: int, *categories: ScoreCategory) -> ScoreTier:
+    per_settlement = Fraction(MAX_POINTS * SETTLEMENT_SECONDS, minutes * 60)
+    return ScoreTier(
+        categories=list(categories),
+        minutes_to_reminder=minutes,
+        points_per_settlement=str(per_settlement),
+    )
+
+
+SCORE_POLICY = ScorePolicy(
+    max_points=MAX_POINTS,
+    settlement_seconds=SETTLEMENT_SECONDS,
+    rest_grace_seconds=REST_GRACE_SECONDS,
+    full_rest_seconds=FULL_REST_SECONDS,
+    rest_points_per_second=str(REST_RATE),
+    tiers=[
+        _tier(30, "phone", "video"),
+        _tier(35, "tablet", "computer"),
+        _tier(40, "paper", "other_text"),
+    ],
+)
+_PER_SECOND = {
+    category: Fraction(tier["points_per_settlement"]) / SETTLEMENT_SECONDS
+    for tier in SCORE_POLICY["tiers"]
+    for category in tier["categories"]
 }
-MAX_SCORE = 100 * TICKS
+TICKS = lcm(REST_RATE.denominator, *(rate.denominator for rate in _PER_SECOND.values()))
+RATE_TICKS = {category: int(rate * TICKS) for category, rate in _PER_SECOND.items()}
+REST_TICKS = int(REST_RATE * TICKS)
+MAX_SCORE = MAX_POINTS * TICKS
 
 
 class FrameTarget(TypedDict):
@@ -66,6 +113,7 @@ class MonitorClip(TypedDict):
 class Monitor(TypedDict):
     rule_version: str
     ticks_per_point: int
+    score_policy: ScorePolicy
     clips: list[MonitorClip]
 
 
@@ -159,20 +207,18 @@ def score(seconds, start=0):
     for boundary, (activity, medium) in enumerate(seconds, start + 1):
         reading += activity == "reading"
         video += activity == "video"
-        rate = READ_RATE.get(medium, 0) if activity == "reading" else 0
-        if activity == "video":
-            rate = 28
+        rate = RATE_TICKS.get(medium if activity == "reading" else activity, 0)
         before = total
         if rate and total < MAX_SCORE:
             pending += 1
             pending_ticks += rate
-            if pending == 6:
+            if pending == SETTLEMENT_SECONDS:
                 total = min(MAX_SCORE, total + pending_ticks)
                 pending = pending_ticks = 0
         if activity == "rest":
             rest += 1
-            if rest > 10:
-                total = max(0, total - 144)
+            if rest > REST_GRACE_SECONDS:
+                total = max(0, total - REST_TICKS)
         else:
             rest = 0
         if before < MAX_SCORE and total == MAX_SCORE:

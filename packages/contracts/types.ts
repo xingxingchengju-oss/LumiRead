@@ -1417,6 +1417,7 @@ export interface components {
             rule_version: string;
             /** Ticks Per Point */
             ticks_per_point: number;
+            score_policy: components["schemas"]["ScorePolicy"];
             /** Clips */
             clips: components["schemas"]["MonitorClip"][];
         };
@@ -1847,6 +1848,30 @@ export interface components {
         Samples: {
             /** Samples */
             samples: components["schemas"]["Sample"][];
+        };
+        /** ScorePolicy */
+        ScorePolicy: {
+            /** Max Points */
+            max_points: number;
+            /** Settlement Seconds */
+            settlement_seconds: number;
+            /** Rest Grace Seconds */
+            rest_grace_seconds: number;
+            /** Full Rest Seconds */
+            full_rest_seconds: number;
+            /** Rest Points Per Second */
+            rest_points_per_second: string;
+            /** Tiers */
+            tiers: components["schemas"]["ScoreTier"][];
+        };
+        /** ScoreTier */
+        ScoreTier: {
+            /** Categories */
+            categories: ("phone" | "video" | "tablet" | "computer" | "paper" | "other_text")[];
+            /** Minutes To Reminder */
+            minutes_to_reminder: number;
+            /** Points Per Settlement */
+            points_per_settlement: string;
         };
         /** ScoredClip */
         ScoredClip: {

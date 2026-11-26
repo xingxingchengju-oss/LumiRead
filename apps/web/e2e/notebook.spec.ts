@@ -85,6 +85,8 @@ test("real product catalog, both rotatable models and device-independent same-ro
       "data-wear",
       "clip",
     );
+    await expect(surface).toHaveAttribute("data-renderer", "webgl");
+    await expect(surface).toHaveAttribute("aria-busy", "false");
     await page.screenshot({ path: info.outputPath("showcase-clip.png") });
     await nav.getByRole("link", { name: "学习感知" }).click();
     await page.getByRole("button", { name: "ToF 距离传感器热点" }).click();
@@ -145,6 +147,7 @@ test("real product catalog, both rotatable models and device-independent same-ro
     await expect(page.getByText(/右镜腿里的电路板/)).toBeVisible();
     await page.getByRole("button", { name: "可充电电池" }).click();
     await expect(page.getByText(/左镜腿内的电池/)).toBeVisible();
+    await expect(surface).toHaveAttribute("aria-busy", "false");
     await page.screenshot({ path: info.outputPath("showcase-frame.png") });
     await nav.getByRole("link", { name: "查看价格" }).click();
     for (const value of ["¥799", "¥499", "¥198 / 年"])

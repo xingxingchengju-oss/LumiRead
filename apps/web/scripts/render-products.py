@@ -14,13 +14,14 @@ from pathlib import Path
 
 import bmesh
 import bpy
+import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 from mathutils.geometry import interpolate_bezier
 
 OUT = Path(__file__).resolve().parents[1] / "public" / "products"
 UNIT = 0.01
-N = 48
+N = 64
 TAU = math.tau
 PARENT = None
 
@@ -95,42 +96,63 @@ def material(name, color, rough, metal=0, coat=0, alpha=1, transmission=0, emiss
     return mat
 
 
+def surface_finish(mat, brushed):
+    """A tile in millimetres. Both the renderer and glTF read the same ORM map."""
+    shader = mat.node_tree.nodes.get("Principled BSDF")
+    roughness = shader.inputs["Roughness"].default_value
+    metallic = shader.inputs["Metallic"].default_value
+    rng = np.random.default_rng(41)
+    grain = rng.normal(0, 0.022, (256, 256))
+    if brushed:
+        grain += rng.normal(0, 0.038, (256, 1))
+    pixels = np.ones((256, 256, 4), dtype=np.float32)
+    pixels[:, :, 1] = np.clip(roughness + grain, 0.04, 0.95)
+    pixels[:, :, 2] = metallic
+    image = bpy.data.images.new(
+        mat.name + " finish", width=256, height=256, alpha=False
+    )
+    image.colorspace_settings.name = "Non-Color"
+    image.pixels.foreach_set(pixels.ravel())
+    image.pack()
+    tree = mat.node_tree
+    tex = tree.nodes.new("ShaderNodeTexImage")
+    tex.image = image
+    channels = tree.nodes.new("ShaderNodeSeparateColor")
+    tree.links.new(tex.outputs["Color"], channels.inputs["Color"])
+    tree.links.new(channels.outputs["Green"], shader.inputs["Roughness"])
+    tree.links.new(channels.outputs["Blue"], shader.inputs["Metallic"])
+    mat["finish_uv"] = True
+
+
 def materials():
-    return {
-        "acetate": material(
-            "Smoke · polished acetate", "49484b", 0.185, 0.055, 0.63, transmission=0.31
-        ),
+    m = {
+        "acetate": material("Smoke · polished acetate", "363437", 0.17, 0.025, 0.88),
         "acetate_edge": material(
-            "Smoke · polished cut edge", "666466", 0.15, 0.035, 0.72, transmission=0.46
+            "Smoke · polished cut edge", "666062", 0.11, 0.025, 0.92
         ),
         "host": material("Graphite · optical acetate", "393537", 0.24, 0.05, 0.44),
-        "tip": material("Carbon · soft-touch elastomer", "38383d", 0.48, 0.025, 0.10),
-        "nose": material(
-            "Clear smoke · cast silicone", "aaa9ab", 0.20, 0.012, 0.42, 0.38, 0.52
-        ),
+        "tip": material("Carbon · soft-touch elastomer", "333439", 0.60, 0, 0.04),
+        "nose": material("Clear smoke · cast silicone", "bcb8b3", 0.32, 0, 0.24, 0.40),
         "lens": material(
-            "Platinum violet · optical coating", "b8c1e9", 0.105, 0.15, 0.48, 0.10
+            "Platinum violet · optical coating", "d1d4e8", 0.038, 0, 0.78, 0.115
         ),
-        "clear": material(
-            "Clear · prescription glass", "cfd7dd", 0.13, 0.09, 0.40, 0.09
-        ),
-        "gold": material("Pale champagne · satin titanium", "c2ac92", 0.26, 0.78, 0.13),
+        "clear": material("Clear · prescription glass", "dfe3e4", 0.04, 0, 0.65, 0.09),
+        "gold": material("Pale champagne · satin titanium", "c7ae8c", 0.24, 0.91, 0.17),
         "edge": material("Polished titanium", "d4c6b8", 0.17, 0.88),
         "dark": material("Ink · anodised hardware", "1b1b20", 0.29, 0.37),
         "gasket": material("Carbon silicone", "242329", 0.53, 0.02),
         "crystal": material("Obsidian · optical window", "23232c", 0.135, 0.36, 0.43),
         "sensor": material("Sapphire · objective", "294269", 0.115, 0.54, 0.58),
         "iris": material("Indigo · objective coating", "584b72", 0.19, 0.59),
-        "glint": material("Optic reflection", "9cbccf", 0.22, 0.40, 0.23),
         "led": material(
             "Sea-glass · illuminated indicator",
-            "a9f5e4",
+            "bfd3c9",
             0.19,
             0.05,
             0.25,
-            emission=1.1,
+            emission=0,
         ),
-        "silver": material("Satin silver · magnesium", "aeadb3", 0.285, 0.75, 0.15),
+        "silver": material("Satin silver · magnesium", "c3c3c5", 0.26, 0.91, 0.13),
         "frost": material("Machined silver", "d3d2d8", 0.22, 0.82),
         "board": material("Solder mask · forest", "225849", 0.36, 0.21),
         "traces": material("Copper under solder mask", "68967b", 0.32, 0.42),
@@ -139,12 +161,29 @@ def materials():
         "cell": material("Amber · cell edge tape", "c58a37", 0.30, 0.37, 0.19),
         "cellmetal": material("Brushed battery pouch", "a5a7a0", 0.35, 0.64),
     }
+    for key in ("gold", "edge", "silver", "frost", "tip"):
+        surface_finish(m[key], brushed=key in ("gold", "edge"))
+    for key in ("lens", "clear"):
+        shader = m[key].node_tree.nodes.get("Principled BSDF")
+        shader.inputs["IOR"].default_value = 1.54
+        if key == "lens":
+            shader.inputs["Thin Film Thickness"].default_value = 300
+            shader.inputs["Thin Film IOR"].default_value = 1.34
+    return m
 
 
 def mesh(name, verts, faces, part, mat, pos=(0, 0, 0), smooth=True):
     data = bpy.data.meshes.new(name)
     data.from_pydata([units(v) for v in verts], [], faces)
     data.update()
+    if mat.get("finish_uv"):
+        uv = data.uv_layers.new(name="Finish")
+        for poly in data.polygons:
+            axis = max(range(3), key=lambda k: abs(poly.normal[k]))
+            u, v = [(1, 2), (0, 2), (1, 0)][axis]
+            for idx in poly.loop_indices:
+                co = data.vertices[data.loops[idx].vertex_index].co
+                uv.data[idx].uv = (co[u] / 0.06, co[v] / 0.06)
     obj = bpy.data.objects.new(name, data)
     bpy.context.collection.objects.link(obj)
     obj.location = units(pos)
@@ -554,14 +593,6 @@ def optics(m, part, pos, r, gold=False):
         m["dark"],
         segments=20,
     )
-    ellipsoid(
-        "Optical catchlight",
-        (x - r * 0.22, y - r * 0.19, z + r * 0.22),
-        (r * 0.085, r * 0.011, r * 0.061),
-        part,
-        m["glint"],
-        segments=16,
-    )
 
 
 def indicator(m, pos, r):
@@ -945,6 +976,203 @@ def temples(m, host):
             anchor("nose", (-pad_x, 4.85, -3.48))
 
 
+def eye_modules(m):
+    for side in (-1, 1):
+        x, z = side * 12.7, 13.0
+        y = wrap(x) + 2.25
+        pod = plate(
+            "Inward camera carrier",
+            (x, y, z),
+            6.2,
+            4.25,
+            1.7,
+            1.8,
+            0.21,
+            "eye",
+            m["dark"],
+        )
+        pod.rotation_euler.z = side * -0.21
+        optic = lathe(
+            "Inward eye objective",
+            (x, y + 0.87, z),
+            [(1.55, 0), (1.52, 0.32), (1.21, 0.50), (0.96, 0.48), (0.84, 0.33)],
+            "eye",
+            m["edge"],
+        )
+        optic.rotation_euler.z = math.pi - side * 0.25
+        ellipsoid(
+            "Eye camera glass", (x, y + 1.31, z), (1.15, 0.19, 1.15), "eye", m["sensor"]
+        )
+        ellipsoid(
+            "Eye camera pupil",
+            (x, y + 1.47, z),
+            (0.46, 0.10, 0.46),
+            "eye",
+            m["crystal"],
+        )
+        for dz in (-0.55, 0.62):
+            ellipsoid(
+                "Near infrared illuminator",
+                (x + side * 2.1, y + 0.94, z + dz),
+                (0.36, 0.22, 0.36),
+                "eye",
+                m["iris"],
+            )
+        if side == 1:
+            anchor("eye", (x, y + 1.67, z))
+
+
+def frame_controls(m):
+    for side in (-1, 1):
+        box(
+            "Capacitive temple strip",
+            (side * 64.83, 68.8, 11.13),
+            (0.23, 10.8, 1.85),
+            0.11,
+            "touch",
+            m["dark"],
+        )
+        for dy in (-2.1, 0, 2.1):
+            box(
+                "Touch strip index",
+                (side * 64.96, 68.8 + dy, 11.13),
+                (0.06, 0.20, 0.90),
+                0.025,
+                "touch",
+                m["frost"],
+            )
+    anchor("touch", (-65.01, 68.8, 11.13))
+    box(
+        "Six-axis inertial sensor",
+        (-62.59, 32.9, 11.27),
+        (0.62, 2.6, 2.6),
+        0.18,
+        "imu",
+        m["chip"],
+    )
+    ellipsoid(
+        "IMU pin one", (-62.92, 32.22, 11.94), (0.045, 0.19, 0.19), "imu", m["pins"]
+    )
+    anchor("imu", (-62.95, 32.9, 11.27))
+    for y in (47.3, 50.2):
+        ellipsoid(
+            "Dock charging contact",
+            (62.2, y, 7.42),
+            (0.80, 1.0, 0.27),
+            "charge",
+            m["pins"],
+        )
+    anchor("charge", (62.2, 49, 7.15))
+    box(
+        "Antenna carrier",
+        (-62.3, 55.3, 11.2),
+        (0.48, 6.0, 4.2),
+        0.14,
+        "radio",
+        m["board"],
+    )
+    for i in range(4):
+        box(
+            "Meander antenna trace",
+            (-62.57, 53.2 + 1.38 * i, 11.2),
+            (0.06, 0.28, 3.15),
+            0.02,
+            "radio",
+            m["pins"],
+        )
+        if i < 3:
+            box(
+                "Antenna trace return",
+                (-62.57, 53.89 + 1.38 * i, 11.2 + (-1) ** i * 1.45),
+                (0.06, 1.5, 0.26),
+                0.02,
+                "radio",
+                m["pins"],
+            )
+    anchor("radio", (-62.7, 55.3, 11.2))
+
+
+def clip_electronics(m, x, y, z):
+    board = "clip-core"
+    plate(
+        "Clip radio and sensor PCB",
+        (x - 7.6, y + 0.6, z),
+        18.8,
+        7.6,
+        0.70,
+        1.5,
+        0.18,
+        board,
+        m["board"],
+    )
+    plate(
+        "Clip processor", (x - 8.8, y, z), 4.6, 3.9, 0.72, 0.34, 0.12, board, m["chip"]
+    )
+    for dx in (-14.5, -12.6, -4, -2.3):
+        for dz in (-1.9, 1.9):
+            box(
+                "Clip component land",
+                (x + dx, y + 0.16, z + dz),
+                (1.1, 0.30, 0.62),
+                0.09,
+                board,
+                m["pins"],
+            )
+    plate(
+        "Clip lithium cell",
+        (x + 9.3, y + 0.50, z),
+        14.9,
+        8.2,
+        3.65,
+        1.3,
+        0.28,
+        board,
+        m["cell"],
+    )
+    plate(
+        "Clip cell foil",
+        (x + 9.3, y - 1.33, z),
+        13.5,
+        7.4,
+        0.14,
+        1.0,
+        0.05,
+        board,
+        m["cellmetal"],
+    )
+    for dx in (1.6, 2.8):
+        box(
+            "Cell flex tab",
+            (x + dx, y - 0.14, z + 1.2),
+            (0.56, 0.35, 2.35),
+            0.08,
+            board,
+            m["pins"],
+        )
+    anchor(board, (x - 1.1, y - 0.75, z))
+    plate(
+        "RF polymer antenna window",
+        (x + 17.9, y - 3.67, z + 0.12),
+        2.5,
+        5.7,
+        1.0,
+        1.12,
+        0.24,
+        "radio",
+        m["dark"],
+    )
+    anchor("radio", (x + 17.9, y - 4.23, z + 0.12))
+    for dx in (6.8, 10.2):
+        ellipsoid(
+            "Clip charging contact",
+            (x + dx, y, z - 6.04),
+            (0.93, 1.05, 0.25),
+            "charge",
+            m["pins"],
+        )
+    anchor("charge", (x + 8.5, y, z - 6.29))
+
+
 def integrated(m):
     front_block(m, False)
     temples(m, False)
@@ -955,6 +1183,8 @@ def integrated(m):
     indicator(m, (-56.37, wrap(-56.37) - 1.90, 14.33), 0.56)
     ambient(m, (60.2, wrap(60.2) - 1.86, 13.1), 1.38)
     distance_window(m, (0, -1.83, 10.08))
+    eye_modules(m)
+    frame_controls(m)
 
 
 def clipped(m):
@@ -964,6 +1194,7 @@ def clipped(m):
     module = empty("Removable magnesium accessory", (x, y, z), "role", "clip-module")
     with inside(module):
         body_y = y - 3.26
+        clip_electronics(m, x, body_y, z)
         plate(
             "Machined magnesium housing",
             (x, body_y, z),
@@ -1148,9 +1379,9 @@ def point_at(obj, point):
 def studio():
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
-    scene.cycles.samples = 96
+    scene.cycles.samples = 32
     scene.cycles.use_denoising = True
-    scene.cycles.max_bounces = 7
+    scene.cycles.max_bounces = 5
     scene.render.film_transparent = True
     scene.render.resolution_x = 1440
     scene.render.resolution_y = 850
@@ -1183,15 +1414,15 @@ def studio():
         point_at(lamp, (0, 0.35, 0.0))
     bpy.ops.object.camera_add()
     cam = bpy.context.object
-    cam.data.type = "ORTHO"
+    cam.data.type = "PERSP"
+    cam.data.sensor_fit = "VERTICAL"
+    cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(12)))
     cam.data.clip_start = 0.03
     scene.camera = cam
     return scene
 
 
-def poster(scene, name, azimuth, elevation):
-    # Fit actual mesh geometry, including the far temple, in a repeatable
-    # landscape composition. Camera framing doubles as the hotspot projection.
+def poster(scene, name, azimuth, elevation, focus=None, span=None, retina=False):
     az, el = math.radians(azimuth), math.radians(elevation)
     direction = Vector(
         (math.sin(az) * math.cos(el), -math.cos(az) * math.cos(el), math.sin(el))
@@ -1202,29 +1433,92 @@ def poster(scene, name, azimuth, elevation):
     bpy.context.view_layer.update()
     rot = cam.rotation_euler.to_matrix()
     right, up = rot @ Vector((1, 0, 0)), rot @ Vector((0, 1, 0))
-    dg = bpy.context.evaluated_depsgraph_get()
-    projected = []
-    for obj in scene.objects:
-        if obj.type != "MESH" or obj.hide_render:
-            continue
-        evaluated = obj.evaluated_get(dg)
-        for vertex in evaluated.data.vertices:
-            p = evaluated.matrix_world @ vertex.co
-            projected.append((p.dot(right), p.dot(up)))
-    x0, x1 = min(p[0] for p in projected), max(p[0] for p in projected)
-    y0, y1 = min(p[1] for p in projected), max(p[1] for p in projected)
-    cam.location = direction * 4 + right * ((x0 + x1) / 2) + up * ((y0 + y1) / 2)
-    cam.data.ortho_scale = max((x1 - x0) / 0.865, (y1 - y0) * 1440 / 850 / 0.82)
+    anchors = {
+        o.get("anchor") or o.get("posterAnchor"): o
+        for o in scene.objects
+        if o.get("anchor") or o.get("posterAnchor")
+    }
+    slope = math.tan(math.radians(12))
+    aspect = 1440 / 850
+    if focus:
+        target = anchors[focus].matrix_world.translation.copy()
+        distance = span / (2 * slope * aspect)
+    else:
+        dg = bpy.context.evaluated_depsgraph_get()
+        corners = []
+        for obj in scene.objects:
+            if obj.type == "MESH" and not obj.hide_render:
+                ob = obj.evaluated_get(dg)
+                corners.extend(ob.matrix_world @ v.co for v in ob.data.vertices)
+        axes = (right, up, direction)
+        coords = np.array([[p.dot(axis) for axis in axes] for p in corners])
+        mid = (coords.min(axis=0) + coords.max(axis=0)) / 2
+        target = sum((axis * float(c) for axis, c in zip(axes, mid)), Vector((0, 0, 0)))
+        dx, dy, depth = (coords - mid).T
+        distance = float(
+            np.max(
+                depth
+                + np.maximum(
+                    abs(dx) / (slope * aspect * 0.89), abs(dy) / (slope * 0.83)
+                )
+            )
+        )
+    cam.location = target + direction * distance
+    point_at(cam, target)
     bpy.context.view_layer.update()
+    scene.render.resolution_x, scene.render.resolution_y = (
+        (2880, 1700) if retina else (1728, 1020)
+    )
     points = {}
-    for obj in scene.objects:
-        key = obj.get("anchor") or obj.get("posterAnchor")
-        if key:
-            p = world_to_camera_view(scene, cam, obj.matrix_world.translation)
-            points[key] = [round(p.x, 5), round(1 - p.y, 5)]
-    scene.render.filepath = str(OUT / (name + ".webp"))
+    for key, obj in anchors.items():
+        v = world_to_camera_view(scene, cam, obj.matrix_world.translation)
+        if v.z > 0 and 0 < v.x < 1 and 0 < v.y < 1:
+            points[key] = [round(v.x, 5), round(1 - v.y, 5)]
+    path = OUT / (name + ("@2x.webp" if retina else ".webp"))
+    scene.render.filepath = str(path)
     bpy.ops.render.render(write_still=True)
+    if retina:
+        small = bpy.data.images.load(str(path))
+        small.scale(1440, 850)
+        small.filepath_raw = str(OUT / (name + ".webp"))
+        small.file_format = "WEBP"
+        small.save()
+        bpy.data.images.remove(small)
     return points
+
+
+def ground_shadow(name):
+    """Bake a top-down contact mask from the underside height of the actual geometry."""
+    scene = bpy.context.scene
+    dg = bpy.context.evaluated_depsgraph_get()
+    count, length = 144, 2.10
+    height = np.full((count, count), np.inf)
+    for row in range(count):
+        for col in range(count):
+            x = ((col + 0.5) / count - 0.5) * length
+            y = ((row + 0.5) / count - 0.5) * length + 0.55
+            hit, point, *_ = scene.ray_cast(
+                dg, Vector((x, y, -0.225)), Vector((0, 0, 1)), distance=0.65
+            )
+            if hit:
+                height[row, col] = max(0, point.z + 0.225)
+    freqs = np.fft.fftfreq(count)
+    radius = freqs[:, None] ** 2 + freqs[None, :] ** 2
+    alpha = np.zeros_like(height)
+    for sigma, decay, strength in [(2.2, 0.055, 0.56), (7.0, 0.24, 0.62)]:
+        kernel = np.exp(-2 * math.pi**2 * sigma**2 * radius)
+        alpha += (
+            strength * np.fft.ifft2(np.fft.fft2(np.exp(-height / decay)) * kernel).real
+        )
+    pixels = np.ones((count, count, 4), dtype=np.float32)
+    pixels[:, :, 3] = np.clip(alpha, 0, 1)
+    im = bpy.data.images.new(
+        name + " contact shadow", width=count, height=count, alpha=True
+    )
+    im.pixels.foreach_set(pixels.ravel())
+    im.file_format = "PNG"
+    im.filepath_raw = str(OUT / (name + "-shadow.png"))
+    im.save()
 
 
 def export_glb(name):
@@ -1234,45 +1528,91 @@ def export_glb(name):
         export_apply=True,
         export_extras=True,
         export_animations=False,
-        export_texcoords=False,
+        export_texcoords=True,
         export_tangents=False,
         export_yup=True,
     )
 
 
+def render_views(name, scene):
+    # Preserve original materials across passes; all optical modes share one master mesh.
+    meshes = [o for o in scene.objects if o.type == "MESH"]
+    original = {o: list(o.data.materials) for o in meshes}
+    cutaway = material("Section skin", "8c9297", 0.27, 0.1, 0.24, 0.075)
+    inside = {
+        "board": "temple-right",
+        "imu": "temple-right",
+        "battery": "temple-left",
+        "clip-core": "shell",
+    }
+    if name == "frame":
+        inside["radio"] = "temple-right"
+
+    def mode(shell=None, open_lens=False):
+        for obj in meshes:
+            part = obj.get("part")
+            obj.hide_render = (part in inside and inside[part] != shell) or (
+                open_lens and part == "lens"
+            )
+            if part in ("temple-right", "temple-left", "shell"):
+                obj.data.materials.clear()
+                for mat in original[obj]:
+                    obj.data.materials.append(
+                        cutaway if shell and part == shell else mat
+                    )
+
+    mode()
+    points = {name: poster(scene, name, 27, 12, retina=True)}
+    if name == "frame":
+        mode(open_lens=True)
+        points["frame-open"] = poster(scene, "frame-open", 27, 12, retina=True)
+        mode("temple-right")
+        points["frame-inside"] = poster(scene, "frame-inside", -111, 24, retina=True)
+        views = [
+            ("camera", -13, 9, 0.24, None),
+            ("tof", 9, 12, 0.26, None),
+            ("light", 13, 10, 0.20, None),
+            ("eye", 154, 12, 0.19, None),
+            ("board", -87, 13, 0.48, "temple-right"),
+            ("imu", -88, 9, 0.18, "temple-right"),
+            ("radio", -88, 9, 0.18, "temple-right"),
+            ("battery", 88, 12, 0.51, "temple-left"),
+            ("charge", 55, -48, 0.23, None),
+            ("touch", -86, 14, 0.29, None),
+        ]
+    else:
+        views = [
+            ("camera", -8, 15, 0.21, None),
+            ("tof", 8, 13, 0.21, None),
+            ("light", 9, 12, 0.20, None),
+            ("clip-core", -8, 22, 0.55, "shell"),
+            ("clamp", 155, 35, 0.43, None),
+            ("button", 12, 53, 0.32, None),
+            ("charge", 14, -60, 0.34, None),
+            ("radio", 17, 9, 0.28, None),
+        ]
+    for part, az, el, span, shell in views:
+        mode(shell)
+        key = "clip-inside" if part == "clip-core" else name + "-" + part
+        points[key] = poster(scene, key, az, el, focus=part, span=span)
+    return points
+
+
 def main():
-    OUT.mkdir(parents=True, exist_ok=True)
+    global OUT
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    if "--output" in args:
+        OUT = Path(args[args.index("--output") + 1]).resolve()
+    OUT.mkdir(parents=True, exist_ok=True)
     points = {}
     for name, build in [("frame", integrated), ("clip", clipped)]:
         bpy.ops.wm.read_factory_settings(use_empty=True)
-        m = materials()
-        build(m)
+        build(materials())
         bpy.context.view_layer.update()
         export_glb(name)
-        if "--models-only" in args:
-            continue
-        scene = studio()
-        points[name] = poster(scene, name, 26, 6)
-        if name == "frame":
-            for obj in scene.objects:
-                if obj.get("part") == "lens":
-                    obj.hide_render = True
-            points["frame-open"] = poster(scene, "frame-open", 26, 6)
-            for obj in scene.objects:
-                if obj.get("part") == "lens":
-                    obj.hide_render = False
-            cutaway = material(
-                "Section view · transparent shell", "a6acb2", 0.27, 0.14, 0.21, 0.10
-            )
-            for obj in scene.objects:
-                if obj.type == "MESH" and obj.get("part") in (
-                    "temple-left",
-                    "temple-right",
-                ):
-                    obj.data.materials.clear()
-                    obj.data.materials.append(cutaway)
-            points["frame-inside"] = poster(scene, "frame-inside", -46, 16)
+        ground_shadow(name)
+        if "--models-only" not in args:
+            points.update(render_views(name, studio()))
     if points:
         (OUT / "poster-points.json").write_text(
             json.dumps(points, indent=2) + "\n", encoding="utf-8"
