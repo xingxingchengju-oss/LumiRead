@@ -1,13 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import "./eyecare.css";
 const Reading = lazy(() => import("./Reading"));
-const Sensors = lazy(() => import("./Sensors"));
-const Timer = lazy(() => import("./Timer"));
 const Reports = lazy(() => import("./Reports"));
 const pages = {
-  reading: "阅读识别",
-  sensors: "距离与光照",
-  timer: "读写与休息",
+  reading: "阅读监测",
   reports: "家长报告",
 };
 type Page = keyof typeof pages;
@@ -19,7 +15,16 @@ export default function EyeCare() {
   const [page, choose] = useState<Page>(section);
   useEffect(() => {
     document.title = "LumiRead · 家庭护眼手册";
-    const handle = () => choose(section());
+    const handle = () => {
+      if (location.hash === "#timer" || location.hash === "#sensors")
+        history.replaceState(
+          history.state,
+          "",
+          location.pathname + location.search + "#reading",
+        );
+      choose(section());
+    };
+    handle();
     window.addEventListener("hashchange", handle);
     return () => window.removeEventListener("hashchange", handle);
   }, []);
@@ -36,16 +41,11 @@ export default function EyeCare() {
         </nav>
       </header>
       <main>
-        <header className="ec-cover">
-          <div>
+        {page === "reading" && (
+          <header className="ec-cover ec-cover-compact">
             <h1>家庭护眼手册</h1>
-            <p>观察阅读片段，回看距离与光线提醒，了解每一天的用眼记录。</p>
-          </div>
-          <img
-            src="/products/frame-open.webp"
-            alt="LumiRead 智能眼镜概念设计"
-          />
-        </header>
+          </header>
+        )}
         <nav className="ec-nav" aria-label="护眼手册目录">
           {(Object.keys(pages) as Page[]).map((k) => (
             <a
@@ -58,15 +58,7 @@ export default function EyeCare() {
           ))}
         </nav>
         <Suspense fallback={<p role="status">正在打开护眼记录…</p>}>
-          {page === "reading" ? (
-            <Reading />
-          ) : page === "sensors" ? (
-            <Sensors />
-          ) : page === "timer" ? (
-            <Timer />
-          ) : (
-            <Reports />
-          )}
+          {page === "reading" ? <Reading /> : <Reports />}
         </Suspense>
       </main>
     </div>

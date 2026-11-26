@@ -1,336 +1,285 @@
 import { useState } from "react";
-import { scenes, type Scene } from "../parent/Clouclip";
-import { duration, Loading, usePublic } from "./shared";
-
 import type { components } from "../../../../packages/contracts/types";
-type Report = components["schemas"]["EyeReport"];
-type Source = Report["source"];
-type Counts = Report["totals"];
+import { Chart } from "../parent/Chart";
+import { duration, Loading, usePublic } from "./shared";
+import "./reports.css";
 
-function detailText(detail: Report["details"][number]) {
-  if ("metric" in detail) {
-    const end = detail.ended_at ? "恢复 " + detail.ended_at : "等待恢复";
-    return [
-      detail.started_at,
-      detail.metric === "Lux" ? "偏暗" : "偏近",
-      end,
-      "CSV 第 " + detail.start_line + " 行",
-    ].join(" · ");
-  }
-  if ("id" in detail)
-    return (
-      "RitW " +
-      detail.id +
-      " · 覆盖 " +
-      duration(detail.covered_seconds) +
-      " · 模型识别阅读 " +
-      duration(detail.predicted_read_seconds)
-    );
-  const alerts = detail.events.map((e) => {
-    const label =
-      "metric" in e
-        ? e.metric === "Dis"
-          ? "偏近"
-          : "偏暗"
-        : e.kind === "rest_due"
-          ? "休息提醒"
-          : "休息完成";
-    return label + " " + e.started_at.slice(11);
-  });
-  return [
-    detail.start,
-    scenes[detail.scene],
-    duration(detail.active_seconds),
-    alerts.join("，") || "无提醒",
-  ].join(" · ");
+type Report = components["schemas"]["WeeklyReport"];
+type Totals = Report["totals"];
+const activities = [
+  ["reading", "阅读"],
+  ["video", "视频"],
+  ["rest", "暂停"],
+  ["unknown", "活动待定"],
+] as const;
+const weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+function calendarDate(date: string, showYear = true) {
+  const [year, month, day] = date.split("-").map(Number);
+  return (showYear ? year + "年" : "") + month + "月" + day + "日";
 }
-const titles = {
-  ritw: "RitW 阅读记录",
-  clouclip: "Clouclip 实测记录",
-  simulated: "模拟学生周报",
-};
-function percent(seconds: number, total: number) {
-  return total ? ((100 * seconds) / total).toFixed(0) + "%" : "—";
+
+function timeText(seconds: number) {
+  const minutes = Math.floor(seconds / 60),
+    rest = seconds % 60;
+  if (!minutes) return rest + "秒";
+  return minutes + "分" + (rest ? rest + "秒" : "");
 }
-function Summary({ source, stats }: { source: Source; stats: Counts }) {
-  const sensor = source === "clouclip";
-  const cells: [string, string][] = sensor
-    ? [
-        ["有效观测", duration(stats.coverage_seconds)],
-        ["偏近提醒", String(stats.near)],
-        ["偏暗提醒", String(stats.dim)],
-      ]
-    : [
-        ["阅读时长", duration(stats.reading_seconds)],
-        [
-          "纸质占比",
-          percent(stats.medium_seconds.Print || 0, stats.reading_seconds),
-        ],
-        [
-          "电子占比",
-          percent(stats.medium_seconds.Digital || 0, stats.reading_seconds),
-        ],
-      ];
-  if (source === "simulated")
-    cells.push(
-      ["偏近提醒", String(stats.near)],
-      ["偏暗提醒", String(stats.dim)],
-      ["休息提醒", String(stats.breaks)],
-    );
+
+function Overview({ totals }: { totals: Totals }) {
+  const metrics = [
+    ["记录总时长", totals.total],
+    ["阅读时长", totals.reading],
+    ["观看视频", totals.video],
+  ] as const;
   return (
-    <div className="ec-stats">
-      {cells.map(([k, v]) => (
-        <div key={k}>
-          <small>{k}</small>
-          <strong>{v}</strong>
+    <dl className="wr-totals" aria-label="本周片段时长">
+      {metrics.map(([label, seconds]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>
+            <time dateTime={`PT${seconds}S`}>
+              {Math.floor(seconds / 60)}
+              <small>分</small>
+              {seconds % 60}
+              <small>秒</small>
+            </time>
+          </dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }
-function View({
-  source,
-  day,
-  scene,
-  onDay,
-}: {
-  source: Source;
-  day: string;
-  scene: Scene;
-  onDay: (s: string) => void;
-}) {
-  const resource = usePublic<Report>(
-    "/eye-care/report?source=" +
-      source +
-      "&scene=" +
-      scene +
-      (day ? "&day=" + day : ""),
+
+function ActivityRadar({ report }: { report: Report }) {
+  const media = report.reading_by_medium;
+  const axes = [
+    ["纸质阅读", media.paper ?? 0],
+    ["手机阅读", media.phone ?? 0],
+    ["电脑阅读", media.computer ?? 0],
+    ["其他文字阅读", media.other_text ?? 0],
+    ["观看视频", report.totals.video],
+    ["暂停", report.totals.rest],
+  ] as const;
+  // Choose one whole-minute step for all four rings and all six axes.
+  const step = Math.max(
+    1,
+    Math.ceil(Math.max(...axes.map(([, s]) => s)) / 240),
   );
-  const [limit, more] = useState(15);
-  const [measure, setMeasure] = useState<
-    "reading_seconds" | "near" | "dim" | "breaks"
-  >(source === "clouclip" ? "near" : "reading_seconds");
-  if (!resource.data) return <Loading {...resource} />;
-  const r = resource.data,
-    today = r.week.find((x) => x.date === r.day)!;
-  const sensor = source === "clouclip",
-    sim = source === "simulated";
-  const amount = (d: Counts) => d[measure];
-  const max = Math.max(1, ...r.week.map(amount));
   return (
-    <>
-      <div className="ec-inputs">
-        <label>
-          报告日期{" "}
-          <input
-            type="date"
-            value={r.day}
-            onChange={(e) => onDay(e.target.value)}
-          />
-        </label>
-        <label>
-          有记录的日期{" "}
-          <select
-            value={r.recorded_days.includes(r.day) ? r.day : ""}
-            onChange={(e) => onDay(e.target.value)}
-          >
-            <option value="" disabled>
-              选择日期
-            </option>
-            {r.recorded_days.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
+    <section className="wr-card" aria-labelledby="wr-radar-title">
+      <h2 id="wr-radar-title">各类活动用了多久</h2>
+      <p className="wr-sub">六个方向刻度相同，每格 {step} 分钟。</p>
+      <div className="wr-radar-body">
+        <Chart
+          height={222}
+          label="六类活动时长雷达图，准确时长见旁边的列表"
+          options={(width) => ({
+            animation: false,
+            radar: {
+              indicator: axes.map(([name]) => ({ name, max: step * 4 })),
+              radius: Math.min(82, (width - 108) / 2),
+              center: ["50%", "50%"],
+              splitNumber: 4,
+              axisNameGap: 7,
+              axisName: { color: "#40584d", fontSize: 12 },
+              axisLine: { lineStyle: { color: "#c3cfbd" } },
+              splitLine: { lineStyle: { color: "#c7d2c1" } },
+              splitArea: { areaStyle: { color: ["#f0f3e8", "#fafaf3"] } },
+            },
+            series: [
+              {
+                type: "radar",
+                symbol: "circle",
+                symbolSize: 6,
+                itemStyle: { color: "#245d4d" },
+                lineStyle: { width: 2, color: "#346b55" },
+                areaStyle: { color: "rgba(104,153,104,.44)" },
+                data: [{ value: axes.map(([, seconds]) => seconds / 60) }],
+              },
+            ],
+          })}
+        />
+        <dl className="wr-values">
+          {axes.map(([label, seconds]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{timeText(seconds)}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
-      <h3>{sim ? "模拟学生 · " : ""}本周汇总</h3>
-      <p>
-        {r.week[0].date} 至 {r.week[6].date} ·{" "}
-        {r.week.filter((d) => d.recorded).length} 天有记录 · 时长以分:秒显示
+      <p className="wr-note">
+        另有{timeText(media.unknown ?? 0)}
+        已识别为阅读，载体待定。这部分已计入阅读总时长。
       </p>
-      {r.week.some((d) => d.recorded) ? (
-        <Summary stats={r.totals} source={source} />
-      ) : (
-        <p>本周无记录。</p>
-      )}
-      <label>
-        趋势指标{" "}
-        <select
-          value={measure}
-          onChange={(e) => setMeasure(e.target.value as typeof measure)}
-        >
-          {!sensor && <option value="reading_seconds">阅读时长</option>}
-          {(sensor || sim) && (
-            <>
-              <option value="near">偏近提醒</option>
-              <option value="dim">偏暗提醒</option>
-            </>
-          )}
-          {sim && <option value="breaks">休息提醒</option>}
-        </select>
-      </label>
-      <div className="ec-week" aria-label="一周每日趋势">
-        {r.week.map((d) => (
-          <button
-            key={d.date}
-            aria-pressed={d.date === r.day}
-            onClick={() => onDay(d.date)}
-          >
-            <small>{d.date.slice(5)}</small>
-            <span className="ec-column">
-              <i
-                style={{
-                  height: (d.recorded ? (amount(d) / max) * 100 : 0) + "%",
-                }}
-              />
-            </span>
-            <strong>
-              {d.recorded
-                ? measure === "reading_seconds"
-                  ? duration(amount(d))
-                  : amount(d) + " 次"
-                : "无记录"}
-            </strong>
-          </button>
-        ))}
-      </div>
-      <h3>
-        {sim ? "模拟学生 · " : ""}
-        {r.day} 日报
-      </h3>
-      {today.recorded ? (
-        <>
-          <Summary stats={today} source={source} />
-          <p>
-            {sensor
-              ? "距离和照度的有效覆盖分别为 " +
-                duration(today.distance_seconds) +
-                " 和 " +
-                duration(today.light_seconds) +
-                "，无效或断采区间已剔除。"
-              : sim
-                ? "时长和提醒来自当天的模拟学习记录。"
-                : "当日测试片段覆盖 " +
-                  duration(today.coverage_seconds) +
-                  "。物体文字占 " +
-                  percent(
-                    today.medium_seconds.Object || 0,
-                    today.reading_seconds,
-                  ) +
-                  "，媒介未确定占 " +
-                  percent(
-                    today.medium_seconds.Unknown || 0,
-                    today.reading_seconds,
-                  ) +
-                  "。分母为模型判定的阅读时长。"}
-          </p>
-          {(sensor || sim) && (
-            <aside className="ec-context">
-              <strong>当日用眼建议</strong>
-              {today.near > 0 && (
-                <p>
-                  出现 {today.near} 次偏近提醒。
-                  {sim
-                    ? "可按日程中的纸质、手机和电脑场景分别调整距离。"
-                    : {
-                        paper: "读写时让书本与眼睛相距约一尺。",
-                        phone: "将手机移到距离眼睛至少 40 厘米的位置。",
-                        computer: "电脑屏幕与眼睛的水平距离至少留出 50 厘米。",
-                      }[scene]}
-                </p>
-              )}
-              {today.dim > 0 && (
-                <p>
-                  出现 {today.dim}{" "}
-                  次偏暗提醒。请检查书写面的光线，留意身体或手臂投下的阴影。
-                </p>
-              )}
-              {today.breaks > 0 && (
-                <p>
-                  达到休息时长 {today.breaks} 次，电子学习后可安排约 10
-                  分钟远眺。
-                </p>
-              )}
-              {!today.near && !today.dim && !today.breaks && (
-                <p>有效记录中没有触发提醒，可继续保持合适的工作距离与照明。</p>
-              )}
-              <a href="https://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202306/t20230616_1064573.html">
-                教育部近视防控问答 ↗
-              </a>
-            </aside>
-          )}
-          <details>
-            <summary>
-              查看当日{sensor ? "提醒" : "片段"}明细（{r.details.length}）
-            </summary>
-            <ul className="ec-detail">
-              {r.details.slice(0, limit).map((d, i) => (
-                <li key={i}>{detailText(d)}</li>
-              ))}
-            </ul>
-            {r.details.length > limit && (
-              <button onClick={() => more((n) => n + 25)}>查看更多</button>
-            )}
-          </details>
-        </>
-      ) : (
-        <p>无记录。当天用眼情况未知。</p>
-      )}
-    </>
-  );
-}
-export default function Reports() {
-  const [source, setSource] = useState<Source>("clouclip"),
-    [day, setDay] = useState(""),
-    [scene, setScene] = useState<Scene>("paper");
-  return (
-    <section
-      className={"ec-card" + (source === "simulated" ? " ec-simulation" : "")}
-    >
-      <h2>家长日报与周报</h2>
-      <div className="ec-switch">
-        {(Object.keys(titles) as Source[]).map((k) => (
-          <button
-            key={k}
-            aria-pressed={source === k}
-            onClick={() => {
-              setSource(k);
-              setDay("");
-            }}
-          >
-            {titles[k]}
-          </button>
-        ))}
-      </div>
-      <p className="ec-context">
-        {source === "simulated"
-          ? "模拟学生 · 虚构的七天家庭记录，所有时长和提醒均来自独立示例。"
-          : source === "ritw"
-            ? "Meta 成人研究片段，按录像的 UTC 日期汇总。每个日期可能包含不同参与者。"
-            : "同一名成年参与者的佩戴记录，按设备所在的美国中部日期汇总。提醒次数来自所选场景的规则回算。"}
-      </p>
-      {source === "clouclip" && (
-        <label>
-          手动选择报告场景{" "}
-          <select
-            value={scene}
-            onChange={(e) => setScene(e.target.value as Scene)}
-          >
-            {Object.entries(scenes).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      <View
-        key={source + scene}
-        source={source}
-        day={day}
-        scene={scene}
-        onDay={setDay}
-      />
     </section>
+  );
+}
+
+function DailyChart({ report }: { report: Report }) {
+  const [selected, select] = useState(0);
+  const day = report.days[selected];
+  const step = Math.max(
+    1,
+    Math.ceil(Math.max(...report.days.map((d) => d.totals.total)) / 300),
+  );
+  const maxSeconds = step * 5 * 60;
+  return (
+    <section className="wr-card" aria-labelledby="wr-days-title">
+      <h2 id="wr-days-title">七天的活动分布</h2>
+      <ul className="wr-legend" aria-label="图例">
+        {activities.map(([key, label]) => (
+          <li key={key}>
+            <i className={"wr-fill-" + key} />
+            {label}
+          </li>
+        ))}
+      </ul>
+      <div className="wr-chart-unit">分钟</div>
+      <div className="wr-day-chart">
+        <div className="wr-scale" aria-hidden="true">
+          {[5, 4, 3, 2, 1, 0].map((tick) => (
+            <span key={tick}>{tick * step}</span>
+          ))}
+        </div>
+        <div className="wr-bars" role="group" aria-label="选择日期查看片段时长">
+          {report.days.map((d, i) => (
+            <button
+              key={d.date}
+              type="button"
+              aria-pressed={i === selected}
+              aria-label={weekdays[i] + "，记录" + timeText(d.totals.total)}
+              aria-controls="wr-day-values"
+              onMouseEnter={() => select(i)}
+              onFocus={() => select(i)}
+              onClick={() => select(i)}
+            >
+              <span className="wr-track" aria-hidden="true">
+                <span
+                  className="wr-stack"
+                  style={{ height: (100 * d.totals.total) / maxSeconds + "%" }}
+                >
+                  {activities.map(([key]) => (
+                    <i
+                      key={key}
+                      className={"wr-fill-" + key}
+                      style={{ flexGrow: d.totals[key] }}
+                    />
+                  ))}
+                </span>
+              </span>
+              <span className="wr-day-label">{weekdays[i]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        className="wr-day-values"
+        id="wr-day-values"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <strong>
+          {day.date.slice(5).replace("-", "/")} {weekdays[selected]}
+        </strong>
+        {activities.map(([key, label]) => (
+          <span key={key}>
+            {label} {timeText(day.totals[key])}
+          </span>
+        ))}
+      </div>
+      <p className="wr-note">
+        浅灰部分是尚未判定的活动，本周共 {timeText(report.totals.unknown)}。
+      </p>
+    </section>
+  );
+}
+
+function ParentLetter({ report }: { report: Report }) {
+  const letter = report.publication?.narrative;
+  if (!letter)
+    return (
+      <p className="wr-card" role="status">
+        这份周报的文字解读尚未准备好。
+      </p>
+    );
+  const facts = new Map(report.facts.map((f) => [f.id, f.text]));
+  return (
+    <article className="wr-letter">
+      <section aria-labelledby="wr-observation">
+        <h2 id="wr-observation">本周观察</h2>
+        <p className="wr-prose">{letter.summary}</p>
+      </section>
+      <section aria-labelledby="wr-actions">
+        <h2 id="wr-actions">下周可以试试</h2>
+        <ul>
+          {letter.suggestions.map((s, i) => (
+            <li key={i}>
+              <p>{s.action}</p>
+              <small>{facts.get(s.fact_id)}</small>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </article>
+  );
+}
+
+export default function Reports() {
+  const resource = usePublic<Report>("/eye-care/weekly-report");
+  if (!resource.data) return <Loading {...resource} />;
+  const r = resource.data;
+  return (
+    <div className="weekly-report">
+      <header className="wr-heading">
+        <div>
+          <h1>{r.student_label}的用眼周报</h1>
+          <p className="wr-dates">
+            <time dateTime={r.week.start}>{calendarDate(r.week.start)}</time>
+            {" 至 "}
+            <time dateTime={r.week.end}>
+              {calendarDate(
+                r.week.end,
+                r.week.start.slice(0, 4) !== r.week.end.slice(0, 4),
+              )}
+            </time>
+          </p>
+          <p className="wr-source">{r.source_note}</p>
+        </div>
+        <img src="/products/frame-open.webp" alt="" />
+      </header>
+      <Overview totals={r.totals} />
+      <div className="wr-charts">
+        <ActivityRadar report={r} />
+        <DailyChart report={r} />
+      </div>
+      <ParentLetter report={r} />
+      <details className="wr-sources">
+        <summary>查看 {r.clips.length} 段录像的来源与区间</summary>
+        <table>
+          <thead>
+            <tr>
+              <th>编排日期</th>
+              <th>Meta 录像 ID</th>
+              <th>原录像起止时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...r.clips]
+              .sort((a, b) => a.date.localeCompare(b.date))
+              .map((c) => (
+                <tr key={c.id}>
+                  <td>{c.date}</td>
+                  <td>{c.id}</td>
+                  <td>
+                    {duration(c.start)} – {duration(c.end)}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </details>
+    </div>
   );
 }

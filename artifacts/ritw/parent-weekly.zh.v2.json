@@ -1,0 +1,30 @@
+{
+  "provider": "OpenAI",
+  "model": "gpt-6.2-sol",
+  "request_sha256": "25bf5a4dd8d5f91196585aff55b3dfce3f1af43d179ad3b4a310e547cd675c67",
+  "prompt_version": "parent-weekly.zh.v2",
+  "prompt_sha256": "e987b3727bcfc08179750eef4014ec118231986f7917c754e9226300d66d2c30",
+  "schema_sha256": "4e5e87bde47e337ec01fb3a390b7e0916094bf5a9ac888830bc76f4d98f80ef4",
+  "input_sha256": "b857e10b91e0fbdd3304e26e1dcfae498e7c72d8877f280586bc7882d54fbf67",
+  "narrative": {
+    "summary": "这份周报只看本周演示日程里的记录片段。片段里，小禾读了18分31秒，看了17分31秒，阅读和看视频的时间接近。纸书、手机和电脑上都记录到了文字阅读，周日也有一部分片段看不出在做什么。",
+    "summary_fact_ids": [
+      "reading",
+      "video",
+      "paper",
+      "phone",
+      "computer",
+      "2026-11-22"
+    ],
+    "suggestions": [
+      {
+        "fact_id": "paper",
+        "action": "下周读完一页纸书时，可以和孩子一起抬头看看窗外远处的景物。"
+      },
+      {
+        "fact_id": "video",
+        "action": "一段视频播完后，可以请孩子放下设备，和您一起起身去倒杯水。"
+      }
+    ]
+  }
+}

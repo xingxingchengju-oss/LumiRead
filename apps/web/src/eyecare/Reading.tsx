@@ -1,259 +1,357 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Controls,
-  duration,
-  Loading,
-  media,
-  usePlayback,
-  usePublic,
-} from "./shared";
-
 import type { components } from "../../../../packages/contracts/types";
-type Clip = components["schemas"]["ScoredClip"];
-type Research = components["schemas"]["Research"];
-const names: Record<string, string> = {
-  alternating: "交替阅读",
-  Print: "纸质",
-  Digital: "电子",
-  Object: "物体文字",
-  everyday: "日常活动",
-  hard_negative: "有文字但未读",
+import { duration, Loading, usePublic } from "./shared";
+
+type Monitor = components["schemas"]["Monitor"];
+type Clip = components["schemas"]["MonitorClip"];
+type Patch = Clip["patches"][number];
+const activities = {
+  reading: "阅读",
+  video: "看视频",
+  rest: "休息",
+  unknown: "待定",
 };
-function Track({
-  title,
-  runs,
-  start,
-  end,
-  position,
-  annotated = false,
-}: {
-  title: string;
-  runs: number[][];
-  start: number;
-  end: number;
-  position: number;
-  annotated?: boolean;
-}) {
-  const pct = (s: number) => (100 * (s - start)) / (end - start) + "%";
-  return (
-    <div className="ec-track">
-      <strong>{title}</strong>
-      <div
-        className={"ec-rail" + (annotated ? " ec-annotated" : "")}
-        aria-hidden="true"
-      >
-        {runs.map(([s, e, c]) => (
-          <i
-            key={s}
-            data-class={c}
-            style={{
-              left: pct(s),
-              width: (100 * (e - s)) / (end - start) + "%",
-            }}
-          />
-        ))}
-        <b style={{ left: pct(position) }} />
-      </div>
-    </div>
-  );
+const media = {
+  phone: "手机",
+  computer: "电脑",
+  tablet: "平板",
+  screen: "屏幕类型待定",
+  paper: "纸质",
+  other_text: "物体文字",
+  unknown: "媒介待定",
+  none: "—",
+};
+const reasons: Record<string, string> = {
+  first: "首个有效片段",
+  resume: "恢复有效判断",
+  enter_reading: "进入阅读",
+  switch: "活动切换",
+  tie: "最高票打平",
+  close_vote: "两类相差一票",
+  gap: "存在缺失秒",
+  periodic: "稳定期间定期复核",
+  unresolved: "上一次证据不足",
+};
+function label(p: Pick<Patch, "activity" | "medium">) {
+  return p.activity === "reading" || p.activity === "video"
+    ? activities[p.activity] + " · " + media[p.medium]
+    : activities[p.activity];
 }
-function ClipView({ clip, showVideo }: { clip: Clip; showVideo: boolean }) {
-  const [start, end] = clip.evaluation;
-  const player = usePlayback(start, end);
+function scoring(p: Patch) {
+  if (p.activity === "rest")
+    return "连续休息前 10 秒保持积分，从第 11 秒起每秒减 2/7 分。";
+  if (p.activity === "unknown") return "活动待定，这些秒数冻结积分。";
+  if (p.activity === "reading" && p.medium === "unknown")
+    return "已确认阅读，时长照计。媒介待定，积分冻结。";
+  const rate =
+    p.activity === "video" || p.medium === "phone"
+      ? "1/3"
+      : p.medium === "computer"
+        ? "2/7"
+        : "1/4";
+  return "此标签每 6 个有效秒加 " + rate + " 分，余秒带入后续片段。";
+}
+
+function Replay({ clip, ticks }: { clip: Clip; ticks: number }) {
   const video = useRef<HTMLVideoElement>(null);
-  const [videoError, errorVideo] = useState(false);
-  const active = clip.intervals.find(
-    ([a, b]) => a <= player.position && player.position < b,
+  const rail = useRef<HTMLDivElement>(null);
+  const cursor = useRef(clip.start);
+  const announced = useRef(new Set<number>());
+  const [position, setPosition] = useState(clip.start);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [failed, setFailed] = useState(false);
+  const [notice, setNotice] = useState("");
+  const index = Math.min(
+    clip.end - clip.start,
+    Math.max(0, Math.floor(position) - clip.start),
   );
-  const truth = clip.reference_intervals.some(
-    ([a, b]) => a <= player.position && player.position < b,
-  );
-  const referenceName =
-    clip.reference_medium > 0 ? media[clip.reference_medium] : "阅读";
-  const prediction = active
-    ? active[2]
-      ? active[3]
-        ? media[active[3]] + "阅读"
-        : "阅读 · 媒介待定"
-      : "未阅读"
-    : "无有效预测";
-  const total = clip.intervals.reduce(
-    (sum, [a, b, read]) =>
-      sum + read * Math.max(0, Math.min(b, player.position) - a),
-    0,
-  );
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
+  const [read, watched, score] = clip.points[index];
+  const patch =
+    clip.patches.find((p) => position < p.end) ??
+    clip.patches[clip.patches.length - 1];
+  const missingNow =
+    position < clip.end && patch.missing.includes(Math.floor(position));
+  const evidence =
+    patch.review ??
+    clip.patches.find((p) => p.start === patch.evidence_start)?.review;
+  const change = (p: Patch) => {
+    const delta =
+      (clip.points[p.end - clip.start][2] -
+        clip.points[p.start - clip.start][2]) /
+      ticks;
+    return (delta > 0 ? "+" : "") + delta.toFixed(2);
+  };
+
+  function seek(t: number) {
+    const next = Math.min(clip.end, Math.max(clip.start, t));
+    cursor.current = next;
+    setPosition(next);
+    setNotice("");
     const v = video.current;
-    if (!v || !ready || videoError) return;
-    v.playbackRate = player.speed;
-    if (Math.abs(v.currentTime - player.position) > 0.55 || !player.playing)
-      v.currentTime = player.position;
-    if (player.playing && v.paused) void v.play().catch(() => {});
-    else if (!player.playing && !v.paused) v.pause();
-  }, [ready, videoError, player.speed, player.playing, player.position]);
+    if (v && v.readyState >= 1) {
+      v.currentTime = next;
+      if (next === clip.end) v.pause();
+    }
+  }
+  useEffect(() => {
+    if (!playing) return;
+    let frame = 0;
+    function follow() {
+      const v = video.current;
+      if (!v) return;
+      if (!v.seeking) {
+        const at = Math.max(clip.start, Math.min(clip.end, v.currentTime));
+        for (const t of clip.reminders) {
+          if (cursor.current < t && t <= at && !announced.current.has(t)) {
+            announced.current.add(t);
+            setNotice(duration(t) + "　提醒积分已达 100，休息一下。");
+          }
+        }
+        cursor.current = at;
+        setPosition(at);
+        if (at >= clip.end) {
+          v.pause();
+          return;
+        }
+      }
+      frame = requestAnimationFrame(follow);
+    }
+    frame = requestAnimationFrame(follow);
+    return () => cancelAnimationFrame(frame);
+  }, [playing, clip]);
+  useEffect(() => {
+    const container = rail.current;
+    const selected = container?.querySelector<HTMLElement>(
+      '[aria-pressed="true"]',
+    );
+    if (!container || !selected) return;
+    const offset = selected.offsetLeft;
+    if (
+      offset < container.scrollLeft ||
+      offset + selected.offsetWidth >
+        container.scrollLeft + container.clientWidth
+    )
+      container.scrollLeft = Math.max(0, offset - container.clientWidth / 3);
+  }, [patch.start]);
+
+  async function toggle() {
+    const v = video.current;
+    if (!v) return;
+    if (playing) {
+      v.pause();
+      return;
+    }
+    if (position >= clip.end) seek(clip.start);
+    try {
+      await v.play();
+    } catch {
+      setNotice("录像暂时无法播放，请重试。");
+    }
+  }
+
   return (
     <>
       <div className="ec-read-grid">
-        <div className="ec-media-area">
-          {showVideo && !videoError ? (
+        <div className="ec-media-area ec-monitor-video">
+          {failed ? (
+            <div className="ec-clip-still">
+              <p>本机缺少这段授权录像，仍可点选下方时间轴。</p>
+            </div>
+          ) : (
             <video
               ref={video}
               muted
               playsInline
-              preload="metadata"
-              aria-label="Meta 眼镜第一视角研究录像"
-              onLoadedMetadata={() => setReady(true)}
-              onError={() => errorVideo(true)}
+              preload="auto"
+              aria-label="眼镜第一视角录像"
               src={"/api/v1/eye-care/preview/" + clip.id}
+              onLoadedMetadata={(e) => {
+                e.currentTarget.currentTime = cursor.current;
+                e.currentTarget.playbackRate = speed;
+              }}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onEnded={() => {
+                setPlaying(false);
+                seek(clip.end);
+              }}
+              onError={() => {
+                setFailed(true);
+                setPlaying(false);
+              }}
             />
-          ) : (
-            <div className="ec-clip-still">
-              <img alt="" src="/products/frame-open.webp" />
-              <p>
-                {showVideo
-                  ? "本机尚未下载授权录像，可使用下方时间轴。"
-                  : "此片段提供逐秒识别时间轴。"}
-              </p>
-            </div>
           )}
-          <a
-            href="https://explorer.projectaria.com/ritw"
-            target="_blank"
-            rel="noreferrer"
-          >
-            在 Meta 按编号查找录像 ↗
-          </a>
         </div>
-        <div className="ec-readout">
-          <small>录像原始时间</small>
-          <strong className="ec-clock">{duration(player.position)}</strong>
+        <div className="ec-readout ec-monitor-current">
+          <small>当前活动</small>
+          <strong>
+            {position >= clip.end
+              ? "回放结束"
+              : missingNow
+                ? "数据缺失"
+                : activities[patch.activity]}
+          </strong>
           <dl>
-            <dt>官方标注</dt>
-            <dd>
-              {player.position >= end
-                ? "片段结束"
-                : truth
-                  ? referenceName + " · 阅读"
-                  : "未阅读"}
-            </dd>
-            <dt>模型预测</dt>
-            <dd>{prediction}</dd>
-            <dt>已识别阅读时长</dt>
-            <dd>{duration(total)}</dd>
+            <dt>注视媒介</dt>
+            <dd>{missingNow ? "—" : media[patch.medium]}</dd>
+            <dt>原始时间</dt>
+            <dd>{duration(position)}</dd>
           </dl>
+          <span className="ec-note">
+            从首次确认阅读处起播
+            <br />
+            录像编号 {clip.id}
+          </span>
         </div>
       </div>
-      <Track
-        title="官方阅读区间"
-        annotated
-        runs={clip.reference_intervals.map(([a, b]) => [a, b, 1])}
-        start={start}
-        end={end}
-        position={player.position}
-      />
-      <Track
-        title="模型阅读区间"
-        runs={clip.intervals.map(([a, b, r]) => [a, b, r ? 2 : 0])}
-        start={start}
-        end={end}
-        position={player.position}
-      />
-      <Controls player={player} start={start} end={end} />
-      <p className="ec-note">
-        编号 {clip.id} · 有效覆盖 {duration(clip.covered_seconds)} ·
-        整段识别阅读 {duration(clip.clock.active_seconds)}
-        。时间轴上的斜纹表示缺少预测，浅灰表示未阅读。此段未达到休息提醒时长。
-      </p>
+      <div className="ec-controls">
+        <button onClick={toggle} disabled={failed}>
+          {playing ? "暂停" : position >= clip.end ? "重播" : "播放"}
+        </button>
+        <label>
+          速度{" "}
+          <select
+            value={speed}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              setSpeed(next);
+              if (video.current) video.current.playbackRate = next;
+            }}
+          >
+            {[1, 2, 4, 10].map((n) => (
+              <option value={n} key={n}>
+                {n}×
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="ec-seek">
+          原始时间{" "}
+          <input
+            type="range"
+            min={clip.start}
+            max={clip.end}
+            step="any"
+            value={position}
+            onChange={(e) => seek(Number(e.target.value))}
+          />
+        </label>
+        <output>
+          {duration(position)} / {duration(clip.end)}
+        </output>
+      </div>
+      <div className="ec-stats ec-monitor-stats">
+        <div>
+          <small>累计阅读时长</small>
+          <strong>{duration(read)}</strong>
+        </div>
+        <div>
+          <small>累计视频时长</small>
+          <strong>{duration(watched)}</strong>
+        </div>
+        <div className="ec-score">
+          <small>用眼提醒积分</small>
+          <strong>
+            {(score / ticks).toFixed(2)} <small>/ 100</small>
+          </strong>
+          <progress aria-label="用眼提醒积分" max={100} value={score / ticks} />
+        </div>
+      </div>
+      {notice && (
+        <p role="status" className="ec-event">
+          {notice}
+        </p>
+      )}
+      <h3>活动时间轴</h3>
+      <div
+        className="ec-patches"
+        ref={rail}
+        role="group"
+        aria-label="每七秒的预测和积分变化"
+      >
+        {clip.patches.map((p) => {
+          const alerts = clip.reminders.filter(
+            (t) => t > p.start && t <= p.end,
+          );
+          return (
+            <button
+              key={p.start}
+              type="button"
+              data-state={p.activity}
+              aria-pressed={p.start === patch.start}
+              onClick={() => seek(p.start)}
+              aria-label={
+                duration(p.start) + " " + label(p) + " " + change(p) + " 分"
+              }
+            >
+              <small>{duration(p.start)}</small>
+              <span>{label(p)}</span>
+              <b>{change(p)} 分</b>
+              {alerts.map((t) => (
+                <em key={t}>{duration(t)} 提醒</em>
+              ))}
+            </button>
+          );
+        })}
+      </div>
+      <section className="ec-patch-detail" aria-label="选中片段的判定依据">
+        <h4>
+          {duration(patch.start)} – {duration(patch.end)}　{label(patch)}
+        </h4>
+        <p>
+          眼动与头动投票　阅读 {patch.read_votes} 票 · 未阅读{" "}
+          {patch.nonread_votes} 票 · 缺失 {patch.missing.length} 秒
+        </p>
+        <p>
+          {patch.reasons.length
+            ? "图像复核 · " +
+              patch.reasons.map((r) => reasons[r] ?? r).join("、")
+            : evidence
+              ? "沿用 " + duration(patch.evidence_start!) + " 的图像复核"
+              : "此段无有效图像证据"}
+        </p>
+        {patch.reasons.length > 0 && !evidence && (
+          <p>同步画面或注视证据不足。</p>
+        )}
+        {evidence && (
+          <p>
+            {evidence.summary}　{evidence.frames.length} 帧中有{" "}
+            {evidence.frames.filter((f) => f.hit).length} 帧注视落在材料内。
+          </p>
+        )}
+        <p>
+          本段积分 {change(patch)}。{scoring(patch)}
+          {patch.missing.length > 0 && "缺失秒冻结积分，并中断连续休息。"}
+        </p>
+      </section>
     </>
   );
 }
+
 export default function Reading() {
-  const r = usePublic<Research>("/eye-care/research");
-  const [choice, choose] = useState("");
-  if (!r.data) return <Loading {...r} />;
-  const { clips, metrics, showcase } = r.data;
-  const clip = clips.find((c) => c.id === (choice || showcase))!;
+  const resource = usePublic<Monitor>("/eye-care/monitor");
+  const [kind, choose] = useState<Clip["kind"]>("paper");
+  if (!resource.data) return <Loading {...resource} />;
+  const { clips, ticks_per_point } = resource.data;
+  const clip = clips.find((c) => c.kind === kind)!;
   return (
-    <>
-      <section className="ec-card">
-        <header className="ec-head">
-          <div>
-            <h2>阅读识别回放</h2>
-            <p>同一段真实录像中的官方标注与模型预测。</p>
-          </div>
-          <label>
-            测试片段{" "}
-            <select value={clip.id} onChange={(e) => choose(e.target.value)}>
-              {[...clips]
-                .sort(
-                  (a, b) =>
-                    Number(b.id === showcase) - Number(a.id === showcase),
-                )
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {names[c.group]} · {c.id.slice(-6)}
-                  </option>
-                ))}
-            </select>
-          </label>
-        </header>
-        <ClipView key={clip.id} clip={clip} showVideo={clip.id === showcase} />
-      </section>
-      <section className="ec-card">
-        <h2>模型在测试集上的表现</h2>
-        <p>
-          {metrics.splits.train.recordings} 段训练、
-          {metrics.splits.val.recordings} 段验证、
-          {metrics.splits.test.recordings}{" "}
-          段测试。两个方法均读取眼动与头部运动。
-        </p>
-        <div className="ec-table">
-          <table>
-            <caption>留出录像 · 两种识别方法</caption>
-            <thead>
-              <tr>
-                {[
-                  "模型",
-                  "阅读 F1",
-                  "时长平均误差",
-                  "有字未读误报率",
-                  "未读召回",
-                  "纸质召回",
-                  "电子召回",
-                  "物体文字召回",
-                ].map((s) => (
-                  <th key={s}>{s}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(["official", "logistic"] as const).map((key) => {
-                const s = metrics[key];
-                return (
-                  <tr key={key}>
-                    <th>
-                      {key === "official" ? "Meta 官方模型" : "逻辑回归基线"}
-                    </th>
-                    <td>{s.read_f1.toFixed(3)}</td>
-                    <td>{s.duration_mae_seconds.toFixed(1)} 秒</td>
-                    <td>{(100 * s.hard_false_positive_rate).toFixed(1)}%</td>
-                    {["No read", "Print", "Digital", "Object"].map((c) => (
-                      <td key={c}>{(100 * s.medium_recall[c]).toFixed(1)}%</td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <section className="ec-card ec-monitor">
+      <header className="ec-head">
+        <h2>阅读监测</h2>
+        <div className="ec-switch" role="group" aria-label="选择实拍录像">
+          {clips.map((c) => (
+            <button
+              key={c.id}
+              aria-pressed={clip.id === c.id}
+              onClick={() => choose(c.kind)}
+            >
+              {c.kind === "paper" ? "纸质阅读" : "电子阅读"}
+            </button>
+          ))}
         </div>
-        <p className="ec-note">
-          本次成人测试中，模型对纸质、电子和物体文字的区分仍有较多漏判。媒介占比用于观察模型表现；距离提醒使用手动选择的场景。
-          <a href="https://github.com/facebookresearch/reading_in_the_wild">
-            Meta 数据与模型许可 ↗
-          </a>
-        </p>
-      </section>
-    </>
+      </header>
+      <Replay key={clip.id} clip={clip} ticks={ticks_per_point} />
+    </section>
   );
 }

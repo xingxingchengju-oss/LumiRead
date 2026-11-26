@@ -147,6 +147,17 @@ ritw-evaluate:
 	$(RITW_PY) -m ml.ritw.evaluate $(if $(OUT),--out "$(OUT)")
 ritw-check:
 	shasum -a 256 -c artifacts/ritw/SHA256SUMS
-	$(PY) -m pytest -q tests/test_eyecare.py tests/test_clouclip.py
+	$(PY) -m pytest -q tests/test_eyecare.py tests/test_clouclip.py tests/test_reading_monitor.py tests/test_weekly_report.py
+.PHONY: ritw-monitor-setup ritw-monitor-fetch ritw-monitor-frames ritw-monitor-review ritw-monitor-evaluate
+ritw-monitor-setup: ritw-setup
+	$(RITW_PY) -m pip install -r ml/ritw/monitor-requirements.txt
+ritw-monitor-fetch: ritw-upstream
+	$(PY) -m ml.ritw.monitor_fetch "$(MANIFEST)"
+ritw-monitor-frames:
+	$(RITW_PY) -m ml.ritw.monitor_frames
+ritw-monitor-review:
+	$(RITW_PY) -m ml.ritw.monitor_review
+ritw-monitor-evaluate:
+	$(RITW_PY) -m ml.ritw.monitor_evaluate $(if $(OUT),--out "$(OUT)")
 rehearse-eyecare: web
 	./scripts/web.sh exec playwright test e2e/eyecare.spec.ts

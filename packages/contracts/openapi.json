@@ -238,6 +238,27 @@
         }
       }
     },
+    "/api/v1/eye-care/weekly-report": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Parent Weekly Report",
+        "operationId": "parent_weekly_report_api_v1_eye_care_weekly_report_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/eye-care/clock": {
       "post": {
         "tags": [
@@ -293,6 +314,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Research"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eye-care/monitor": {
+      "get": {
+        "tags": [
+          "Eye care"
+        ],
+        "summary": "Monitor View",
+        "operationId": "monitor_view_api_v1_eye_care_monitor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Monitor"
                 }
               }
             }
@@ -1780,6 +1822,39 @@
         ],
         "title": "Accounts"
       },
+      "ActivitySeconds": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "reading": {
+            "type": "integer",
+            "title": "Reading"
+          },
+          "video": {
+            "type": "integer",
+            "title": "Video"
+          },
+          "rest": {
+            "type": "integer",
+            "title": "Rest"
+          },
+          "unknown": {
+            "type": "integer",
+            "title": "Unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "reading",
+          "video",
+          "rest",
+          "unknown"
+        ],
+        "title": "ActivitySeconds"
+      },
       "Alert": {
         "properties": {
           "metric": {
@@ -2639,6 +2714,89 @@
         ],
         "title": "EyeReport"
       },
+      "FrameTarget": {
+        "properties": {
+          "second": {
+            "type": "number",
+            "title": "Second"
+          },
+          "gaze": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gaze"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "computer",
+              "tablet",
+              "screen",
+              "paper",
+              "other_text",
+              "unknown",
+              "none"
+            ],
+            "title": "Medium"
+          },
+          "box": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 4,
+                "minItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box"
+          },
+          "hit": {
+            "type": "boolean",
+            "title": "Hit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "second",
+          "gaze",
+          "medium",
+          "box",
+          "hit"
+        ],
+        "title": "FrameTarget"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -3155,6 +3313,148 @@
         ],
         "title": "ModelScore"
       },
+      "Monitor": {
+        "properties": {
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "ticks_per_point": {
+            "type": "integer",
+            "title": "Ticks Per Point"
+          },
+          "clips": {
+            "items": {
+              "$ref": "#/components/schemas/MonitorClip"
+            },
+            "type": "array",
+            "title": "Clips"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_version",
+          "ticks_per_point",
+          "clips"
+        ],
+        "title": "Monitor"
+      },
+      "MonitorClip": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "digital"
+            ],
+            "title": "Kind"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "patches": {
+            "items": {
+              "$ref": "#/components/schemas/Patch"
+            },
+            "type": "array",
+            "title": "Patches"
+          },
+          "points": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array",
+              "maxItems": 3,
+              "minItems": 3
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "reminders": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Reminders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "start",
+          "end",
+          "patches",
+          "points",
+          "reminders"
+        ],
+        "title": "MonitorClip"
+      },
+      "Observation": {
+        "properties": {
+          "activity": {
+            "type": "string",
+            "enum": [
+              "reading",
+              "video",
+              "rest",
+              "unknown"
+            ],
+            "title": "Activity"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "computer",
+              "tablet",
+              "screen",
+              "paper",
+              "other_text",
+              "unknown",
+              "none"
+            ],
+            "title": "Medium"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/FrameTarget"
+            },
+            "type": "array",
+            "title": "Frames"
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity",
+          "medium",
+          "summary",
+          "frames"
+        ],
+        "title": "Observation"
+      },
       "PanelMetrics": {
         "properties": {
           "revision": {
@@ -3186,6 +3486,99 @@
           "logistic"
         ],
         "title": "PanelMetrics"
+      },
+      "Patch": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "read_votes": {
+            "type": "integer",
+            "title": "Read Votes"
+          },
+          "nonread_votes": {
+            "type": "integer",
+            "title": "Nonread Votes"
+          },
+          "missing": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Observation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Start"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "reading",
+              "video",
+              "rest",
+              "unknown"
+            ],
+            "title": "Activity"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "computer",
+              "tablet",
+              "screen",
+              "paper",
+              "other_text",
+              "unknown",
+              "none"
+            ],
+            "title": "Medium"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "read_votes",
+          "nonread_votes",
+          "missing",
+          "reasons",
+          "review",
+          "evidence_start",
+          "activity",
+          "medium"
+        ],
+        "title": "Patch"
       },
       "PhoneSetup": {
         "properties": {
@@ -4610,6 +5003,260 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WeekRange": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "WeekRange"
+      },
+      "WeeklyClip": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "start",
+          "end"
+        ],
+        "title": "WeeklyClip"
+      },
+      "WeeklyDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ActivitySeconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "totals"
+        ],
+        "title": "WeeklyDay"
+      },
+      "WeeklyFact": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "WeeklyFact"
+      },
+      "WeeklyNarrative": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "温和简洁的一段家校观察，在开头交代片段范围。所用时长原样照录对应 facts 中的数值和单位，不添加差值、倍数、百分比或约数。"
+          },
+          "summary_fact_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Summary Fact Ids",
+            "description": "逐一列出摘要中每个观察及每个数值对应的输入事实 ID。"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklySuggestion"
+            },
+            "type": "array",
+            "title": "Suggestions",
+            "description": "两条互补的用眼习惯建议。第一条用阅读事实引出阅读间歇，第二条用手机阅读或观看视频的事实引出离屏休息。各自给出不同的具体做法，动作与 fact_id 对应。"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary",
+          "summary_fact_ids",
+          "suggestions"
+        ],
+        "title": "WeeklyNarrative"
+      },
+      "WeeklyPublication": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "request_sha256": {
+            "type": "string",
+            "title": "Request Sha256"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "prompt_sha256": {
+            "type": "string",
+            "title": "Prompt Sha256"
+          },
+          "schema_sha256": {
+            "type": "string",
+            "title": "Schema Sha256"
+          },
+          "input_sha256": {
+            "type": "string",
+            "title": "Input Sha256"
+          },
+          "narrative": {
+            "$ref": "#/components/schemas/WeeklyNarrative"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "request_sha256",
+          "prompt_version",
+          "prompt_sha256",
+          "schema_sha256",
+          "input_sha256",
+          "narrative"
+        ],
+        "title": "WeeklyPublication"
+      },
+      "WeeklyReport": {
+        "properties": {
+          "student_label": {
+            "type": "string",
+            "title": "Student Label"
+          },
+          "week": {
+            "$ref": "#/components/schemas/WeekRange"
+          },
+          "source_note": {
+            "type": "string",
+            "title": "Source Note"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/ActivitySeconds"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyDay"
+            },
+            "type": "array",
+            "title": "Days"
+          },
+          "reading_by_medium": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Reading By Medium"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyFact"
+            },
+            "type": "array",
+            "title": "Facts"
+          },
+          "clips": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyClip"
+            },
+            "type": "array",
+            "title": "Clips"
+          },
+          "publication": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeeklyPublication"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_label",
+          "week",
+          "source_note",
+          "totals",
+          "days",
+          "reading_by_medium",
+          "facts",
+          "clips",
+          "publication"
+        ],
+        "title": "WeeklyReport"
+      },
+      "WeeklySuggestion": {
+        "properties": {
+          "fact_id": {
+            "type": "string",
+            "title": "Fact Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "一句可实行的用眼建议。描述读完一页或一段视频结束等自然节点，以及抬头看看远处、放下屏幕活动一下等具体的用眼间歇动作。建议只写动作，观察数据由页面另行展示，不添加时长、距离或次数目标。"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fact_id",
+          "action"
+        ],
+        "title": "WeeklySuggestion"
       }
     }
   }

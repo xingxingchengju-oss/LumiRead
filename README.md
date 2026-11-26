@@ -1,8 +1,8 @@
 # LumiRead · 家庭护眼手册
 
-LumiRead 在电脑上回放真实眼镜记录，让家长查看模型判定的阅读片段、距离与光线提醒的原始时刻，以及每周的有效观测时长。首页包含阅读与媒介识别、距离与光照提醒、读写计时、用眼建议，以及家长日报和周报。智能眼镜与夹片为产品概念设计。
+LumiRead 是一个电脑端家庭护眼演示。阅读监测页用 Meta Reading in the Wild（RitW）的成人研究录像展示模型如何区分阅读、看视频和暂停。家长周报把 15 段录像的预测结果编排成虚构学生「小禾」的一周，每段统计都可追溯到原录像区间。智能眼镜与夹片为产品概念设计。
 
-[实验结果](docs/PUBLIC_RESULTS.md) · [英文商业与机器学习报告](reports/LumiRead_Business_and_ML.pdf) · [离线路演稿（下载 HTML 后用浏览器打开）](reports/LumiRead_Roadshow.html)
+13 段独立测试录像共含 2,336 秒，阅读召回率为 **82.8%**，视频为 **84.5%**。暂停只有一段烹饪录像作为对照，召回率为 **35.6%**。全部测试时间中有 **19.8%** 的活动被标为待定，周报单独列出这部分时长。[当前评测与各类样本量](docs/PUBLIC_RESULTS.md#双样片阅读监测) · [实验复现](ml/ritw/README.md)
 
 ## 在本机运行
 
@@ -13,18 +13,22 @@ make bootstrap
 make demo
 ```
 
-打开[家庭护眼手册](http://127.0.0.1:8742/)。仓库内的冻结预测、Clouclip 读数和模拟周报可直接回放。原始研究录像按 Meta 的数据访问流程单独获取。下载 Explorer 清单后，运行 `make ritw-preview MANIFEST=/absolute/path/to/ritw_download_urls.json`，刷新阅读识别页即可看到与时间轴同步的授权视频。[官方入口](https://explorer.projectaria.com/ritw) · [完整复现步骤与数据许可](ml/ritw/README.md)
+macOS 完成 `make bootstrap` 后，也可双击「启动阅读监测.command」打开演示。[启动脚本](启动阅读监测.command)
+
+打开[家庭护眼手册](http://127.0.0.1:8742/)。冻结预测、周报图表和已生成的家长解读可在本机离线查看。原始研究录像按 Meta 的数据访问流程单独获取。下载 Explorer 清单后，运行 `make ritw-preview MANIFEST=/absolute/path/to/ritw_download_urls.json`，刷新阅读监测页即可播放两段与时间轴同步的授权视频。[官方入口](https://explorer.projectaria.com/ritw) · [完整复现步骤与数据许可](ml/ritw/README.md)
 
 | 护眼手册入口 | 可以核对的内容 |
 | --- | --- |
-| [阅读识别](http://127.0.0.1:8742/#reading) | 切换 30 段留出录像，对照官方标注、模型判定的阅读与媒介、有效覆盖和累计时长。 |
-| [距离与光照](http://127.0.0.1:8742/#sensors) | 选择纸质、手机或电脑场景，播放偏近、偏暗和恢复片段，逐条核对源文件行号。 |
-| [读写与休息](http://127.0.0.1:8742/#timer) | 纸质读写满 40 分钟，电子学习满 30 分钟提醒，建议远眺约 10 分钟。可切换到规则演示推进时间。 |
-| [家长报告](http://127.0.0.1:8742/#reports) | 查看 RitW 阅读记录、Clouclip 提醒或标明「模拟学生」的完整七天。点击日期，查看覆盖时间、建议与明细。 |
+| [阅读监测](http://127.0.0.1:8742/#reading) | 切换纸质与手机阅读实拍。每 7 秒查看活动、媒介、眼动投票和图像复核，随录像观察阅读时长、视频时长与提醒积分。 |
+| [家长报告](http://127.0.0.1:8742/#reports) | 查看小禾一周的六类活动时长、七天活动分布和为家长生成的建议。点按柱图可查看当天时长，页末可核对 15 段录像的原始区间。 |
 
-Meta RitW Seattle 实验按官方划分抽取 96 段成人记录。30 段测试录像共 5,874 个有效秒，Meta 模型的阅读 F1 为 **0.782**，自训逻辑回归为 **0.694**。纸质、电子和物体文字的官方模型召回率分别为 22.6%、28.0%、26.5%。距离提醒由使用者手动指定场景。Clouclip 是另一项成人观测研究，两份实测报告各自汇总。模拟周报展示的是虚构学生。运行 `make ritw-check` 可用冻结预测重新核算指标，并验证提醒和计时边界。[实验方法和结果](ml/ritw/README.md) · [Clouclip 数据说明](data/clouclip/README.md)
+双样片从官方验证集的 15 段候选中选出。多模态监测另用全部 8 段留出视频以及 5 段文字与非阅读对照评测。[阅读监测留出结果](docs/PUBLIC_RESULTS.md#双样片阅读监测)
 
-![Clouclip 偏暗提醒在原始读数恢复后的回放画面](reports/showcase/eyecare.png)
+早期仅用眼动与头动的 Meta RitW Seattle 实验按官方划分抽取 96 段成人记录。30 段测试录像共 5,874 个有效秒，Meta 模型的阅读 F1 为 **0.782**，自训逻辑回归为 **0.694**。纸质、电子和物体文字的官方模型召回率分别为 22.6%、28.0%、26.5%。运行 `make ritw-check` 可用冻结预测重新核算指标，并验证提醒和计时边界。[实验方法和结果](ml/ritw/README.md)
+
+周报将 15 段预测按录像 ID 排序，轮流编排进 2026 年 11 月 16 日至 22 日，保留各段原时长。后端在准备演示时使用固定提示词和周统计生成文字。运行 `.venv/bin/python -m scripts.weekly_report` 会复用匹配的已发布结果，需要生成时才从后端读取 API 配置。只读接口为 `GET /api/v1/eye-care/weekly-report`。[定稿提示词 v2](apps/api/prompts/parent-weekly.zh.v2.txt) · [已发布的文字与输入摘要](artifacts/ritw/parent-weekly.zh.v2.json)
+
+![小禾的用眼周报及七天活动分布](reports/showcase/eyecare.png)
 
 ## 眼镜设计与作业学习
 
@@ -55,6 +59,8 @@ FedAvg 在一台机器上模拟 1,653 个学生客户端，每轮抽取 64 个�
 在线批改评估通过常规上传入口提交了 24 张程序排版的数学作业截图。六类题型各 20 题，120 题全部获得自动判分，其中 119 题与预先计算的答案一致（99.17%）。这次评估只覆盖排版截图，真实手写字迹、倾斜拍摄和阴影条件下的准确率仍待评估。[逐题批改汇总指标](reports/vision_evaluation.json)
 
 ## 仓库导览
+
+上一版课程材料记录了 Clouclip 距离与照度回放、读写计时和早期 RitW 实验，可与当前阅读监测的评测对照阅读。[英文商业与机器学习报告](reports/LumiRead_Business_and_ML.pdf) · [离线路演稿（下载 HTML 后用浏览器打开）](reports/LumiRead_Roadshow.html)
 
 | 目录 | 内容 |
 | --- | --- |

@@ -1,4 +1,4 @@
-"""Retrieve licensed eye gaze, odometry and one preview using an Explorer manifest."""
+"""Retrieve licensed RitW inputs or the two frozen monitor previews."""
 
 import argparse
 import hashlib
@@ -122,15 +122,18 @@ def main():
     p.add_argument(
         "--preview-only",
         action="store_true",
-        help="Get just the authorized classroom video for the frozen timeline.",
+        help="Get the two authorized classroom videos for the frozen monitor.",
     )
     args = p.parse_args()
     if not args.manifest.is_file():
         p.error("Supply the path to your Project Aria download manifest.")
     assets = json.loads(args.manifest.read_text())["sequences"]
     if args.preview_only:
-        preview_id = json.loads((ARTIFACTS / "replays.json").read_text())["showcase"]
-        selected_ids = [preview_id]
+        selected_ids = [
+            r["id"]
+            for r in json.loads((ARTIFACTS / "monitor.json").read_text())["clips"]
+        ]
+        preview_id = None
     else:
         panel = selected()
         preview_id = next(
@@ -148,7 +151,12 @@ def main():
     def run(seq):
         for attempt in range(4):
             try:
-                fetch(seq, assets["recording_" + seq], preview_id, args.preview_only)
+                fetch(
+                    seq,
+                    assets["recording_" + seq],
+                    seq if args.preview_only else preview_id,
+                    args.preview_only,
+                )
                 return seq
             except (
                 OSError,

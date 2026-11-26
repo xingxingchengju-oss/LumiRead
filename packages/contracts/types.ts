@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eye-care/weekly-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parent Weekly Report */
+        get: operations["parent_weekly_report_api_v1_eye_care_weekly_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/eye-care/clock": {
         parameters: {
             query?: never;
@@ -166,6 +183,23 @@ export interface paths {
         };
         /** Research View */
         get: operations["research_view_api_v1_eye_care_research_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eye-care/monitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Monitor View */
+        get: operations["monitor_view_api_v1_eye_care_monitor_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -829,6 +863,19 @@ export interface components {
             /** Accounts */
             accounts: components["schemas"]["Account"][];
         };
+        /** ActivitySeconds */
+        ActivitySeconds: {
+            /** Total */
+            total: number;
+            /** Reading */
+            reading: number;
+            /** Video */
+            video: number;
+            /** Rest */
+            rest: number;
+            /** Unknown */
+            unknown: number;
+        };
         /** Alert */
         Alert: {
             /**
@@ -1159,6 +1206,30 @@ export interface components {
             /** Details */
             details: (components["schemas"]["ReadingDetail"] | components["schemas"]["SimulatedDetail"] | components["schemas"]["Episode"])[];
         };
+        /** FrameTarget */
+        FrameTarget: {
+            /** Second */
+            second: number;
+            /** Gaze */
+            gaze: [
+                number,
+                number
+            ] | null;
+            /**
+             * Medium
+             * @enum {string}
+             */
+            medium: "phone" | "computer" | "tablet" | "screen" | "paper" | "other_text" | "unknown" | "none";
+            /** Box */
+            box: [
+                number,
+                number,
+                number,
+                number
+            ] | null;
+            /** Hit */
+            hit: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1340,6 +1411,56 @@ export interface components {
             /** Hard False Positive Rate */
             hard_false_positive_rate: number;
         };
+        /** Monitor */
+        Monitor: {
+            /** Rule Version */
+            rule_version: string;
+            /** Ticks Per Point */
+            ticks_per_point: number;
+            /** Clips */
+            clips: components["schemas"]["MonitorClip"][];
+        };
+        /** MonitorClip */
+        MonitorClip: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "paper" | "digital";
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Patches */
+            patches: components["schemas"]["Patch"][];
+            /** Points */
+            points: [
+                number,
+                number,
+                number
+            ][];
+            /** Reminders */
+            reminders: number[];
+        };
+        /** Observation */
+        Observation: {
+            /**
+             * Activity
+             * @enum {string}
+             */
+            activity: "reading" | "video" | "rest" | "unknown";
+            /**
+             * Medium
+             * @enum {string}
+             */
+            medium: "phone" | "computer" | "tablet" | "screen" | "paper" | "other_text" | "unknown" | "none";
+            /** Summary */
+            summary: string;
+            /** Frames */
+            frames: components["schemas"]["FrameTarget"][];
+        };
         /** PanelMetrics */
         PanelMetrics: {
             /** Revision */
@@ -1352,6 +1473,34 @@ export interface components {
             };
             official: components["schemas"]["ModelScore"];
             logistic: components["schemas"]["ModelScore"];
+        };
+        /** Patch */
+        Patch: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Read Votes */
+            read_votes: number;
+            /** Nonread Votes */
+            nonread_votes: number;
+            /** Missing */
+            missing: number[];
+            /** Reasons */
+            reasons: string[];
+            review: components["schemas"]["Observation"] | null;
+            /** Evidence Start */
+            evidence_start: number | null;
+            /**
+             * Activity
+             * @enum {string}
+             */
+            activity: "reading" | "video" | "rest" | "unknown";
+            /**
+             * Medium
+             * @enum {string}
+             */
+            medium: "phone" | "computer" | "tablet" | "screen" | "paper" | "other_text" | "unknown" | "none";
         };
         /** PhoneSetup */
         PhoneSetup: {
@@ -1884,6 +2033,115 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** WeekRange */
+        WeekRange: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+        };
+        /** WeeklyClip */
+        WeeklyClip: {
+            /** Id */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+        };
+        /** WeeklyDay */
+        WeeklyDay: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            totals: components["schemas"]["ActivitySeconds"];
+        };
+        /** WeeklyFact */
+        WeeklyFact: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+        };
+        /** WeeklyNarrative */
+        WeeklyNarrative: {
+            /**
+             * Summary
+             * @description 温和简洁的一段家校观察，在开头交代片段范围。所用时长原样照录对应 facts 中的数值和单位，不添加差值、倍数、百分比或约数。
+             */
+            summary: string;
+            /**
+             * Summary Fact Ids
+             * @description 逐一列出摘要中每个观察及每个数值对应的输入事实 ID。
+             */
+            summary_fact_ids: string[];
+            /**
+             * Suggestions
+             * @description 两条互补的用眼习惯建议。第一条用阅读事实引出阅读间歇，第二条用手机阅读或观看视频的事实引出离屏休息。各自给出不同的具体做法，动作与 fact_id 对应。
+             */
+            suggestions: components["schemas"]["WeeklySuggestion"][];
+        };
+        /** WeeklyPublication */
+        WeeklyPublication: {
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Prompt Sha256 */
+            prompt_sha256: string;
+            /** Schema Sha256 */
+            schema_sha256: string;
+            /** Input Sha256 */
+            input_sha256: string;
+            narrative: components["schemas"]["WeeklyNarrative"];
+        };
+        /** WeeklyReport */
+        WeeklyReport: {
+            /** Student Label */
+            student_label: string;
+            week: components["schemas"]["WeekRange"];
+            /** Source Note */
+            source_note: string;
+            totals: components["schemas"]["ActivitySeconds"];
+            /** Days */
+            days: components["schemas"]["WeeklyDay"][];
+            /** Reading By Medium */
+            reading_by_medium: {
+                [key: string]: number;
+            };
+            /** Facts */
+            facts: components["schemas"]["WeeklyFact"][];
+            /** Clips */
+            clips: components["schemas"]["WeeklyClip"][];
+            publication: components["schemas"]["WeeklyPublication"] | null;
+        };
+        /** WeeklySuggestion */
+        WeeklySuggestion: {
+            /** Fact Id */
+            fact_id: string;
+            /**
+             * Action
+             * @description 一句可实行的用眼建议。描述读完一页或一段视频结束等自然节点，以及抬头看看远处、放下屏幕活动一下等具体的用眼间歇动作。建议只写动作，观察数据由页面另行展示，不添加时长、距离或次数目标。
+             */
+            action: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -2103,6 +2361,26 @@ export interface operations {
             };
         };
     };
+    parent_weekly_report_api_v1_eye_care_weekly_report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeeklyReport"];
+                };
+            };
+        };
+    };
     clock_api_v1_eye_care_clock_post: {
         parameters: {
             query?: never;
@@ -2152,6 +2430,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Research"];
+                };
+            };
+        };
+    };
+    monitor_view_api_v1_eye_care_monitor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Monitor"];
                 };
             };
         };

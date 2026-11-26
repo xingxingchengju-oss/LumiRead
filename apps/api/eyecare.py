@@ -15,6 +15,8 @@ from typing_extensions import TypedDict
 
 from . import clouclip as cc
 from . import storage
+from .monitor import Monitor
+from .weekly import WeeklyReport, weekly_report
 
 router = APIRouter(prefix="/eye-care", tags=["Eye care"])
 RULE = "reading-rest-v1"
@@ -22,6 +24,11 @@ Study = Literal["paper", "writing", "electronic", "other"]
 ClockSource = Literal["manual", "rule_demo", "RitW", "simulated"]
 ReportSource = Literal["ritw", "clouclip", "simulated"]
 RITW = storage.ROOT / "artifacts/ritw"
+
+
+@router.get("/weekly-report", response_model=WeeklyReport)
+def parent_weekly_report():
+    return weekly_report()
 
 
 class Span(BaseModel):
@@ -220,13 +227,26 @@ def research_view():
     return {**research(), "metrics": json.loads((RITW / "metrics.json").read_text())}
 
 
+@router.get("/monitor", response_model=Monitor)
+@cache
+def monitor_view():
+    file = RITW / "monitor.json"
+    if not file.is_file():
+        raise HTTPException(503, "本机尚未准备双样片回放数据。")
+    return json.loads(file.read_text())
+
+
 @router.get(
     "/preview/{recording}",
     response_class=FileResponse,
     responses={200: {"content": {"video/mp4": {}}}},
 )
 def preview(recording: str):
-    if recording != research()["showcase"]:
+    legacy = recording == research()["showcase"]
+    if not legacy and (
+        not (RITW / "monitor.json").is_file()
+        or recording not in {c["id"] for c in monitor_view()["clips"]}
+    ):
         raise HTTPException(404, "没有对应的演示录像。")
     file = storage.ROOT / ".cache/ritw/sequences" / recording / "preview.mp4"
     if not file.is_file():

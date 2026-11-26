@@ -118,7 +118,7 @@ class ProviderFailure(Exception):
     pass
 
 
-def request_grade(provider, url, model, key, body, transport):
+def request_structured(provider, url, model, key, body, transport, response_type):
     with httpx.Client(
         timeout=httpx.Timeout(55, connect=8), transport=transport
     ) as client:
@@ -138,16 +138,20 @@ def request_grade(provider, url, model, key, body, transport):
         )
     else:
         answer = data["choices"][0]["message"]["content"]
-    grade = Grade.model_validate_json(answer)
+    parsed = response_type.model_validate_json(answer)
     request_id = res.headers.get("x-request-id") or data.get("id")
     if not request_id:
         raise ValueError("Missing provider receipt")
-    return grade, {
+    return parsed, {
         "provider": provider,
         "model": data.get("model") or model,
         "request_id": request_id,
         "usage": data.get("usage") or {},
     }
+
+
+def request_grade(provider, url, model, key, body, transport):
+    return request_structured(provider, url, model, key, body, transport, Grade)
 
 
 def grade_photo(photo, transport=None, *, correction=None, only_provider=None):
