@@ -7,7 +7,9 @@ export const chapters = [
 ] as const;
 
 export type Chapter = (typeof chapters)[number]["id"];
+export const cameraChapters = chapters.filter((c) => c.id !== "construction");
 export type ScrollTrack = { progress: number; redraw?: () => void };
+export type PosterPoints = Record<string, Record<string, [number, number]>>;
 export type Wear = "open" | "blue" | "clip";
 export const choices: { id: Wear; label: string; detail: string }[] = [
   {
@@ -168,11 +170,7 @@ export function markers(
     return clip ? ["clip-core", "clamp"] : ["temple-right", "eye"];
   return ["lens"];
 }
-export function posterKey(
-  wear: Wear,
-  chapter: Chapter,
-  selected: Selection | null,
-) {
+export function posterKey(wear: Wear, selected: Selection | null) {
   const clip = wear === "clip",
     model = clip ? "clip" : "frame",
     part = selected?.part;
@@ -185,13 +183,6 @@ export function posterKey(
           : part;
     return view === "clip-core" ? "clip-inside" : model + "-" + view;
   }
-  if (!part && chapter === "construction")
-    return clip ? "clip-inside" : "frame-inside";
   return wear === "open" ? "frame-open" : model;
 }
-export const wholePosters = new Set([
-  "frame",
-  "frame-open",
-  "clip",
-  "frame-inside",
-]);
+export const wholePosters = new Set(["frame", "frame-open", "clip"]);

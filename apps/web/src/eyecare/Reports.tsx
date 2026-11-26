@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { components } from "../../../../packages/contracts/types";
-import { Chart } from "../parent/Chart";
 import { duration, Loading, usePublic } from "./shared";
+import windowScene from "./weekly-window.webp";
 import "./reports.css";
 
 type Report = components["schemas"]["WeeklyReport"];
@@ -12,10 +12,9 @@ const activities = [
   ["rest", "暂停"],
   ["unknown", "活动待定"],
 ] as const;
-const weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-function calendarDate(date: string, showYear = true) {
-  const [year, month, day] = date.split("-").map(Number);
-  return (showYear ? year + "年" : "") + month + "月" + day + "日";
+
+function weekday(date: string) {
+  return "周" + "日一二三四五六"[new Date(date + "T00:00:00Z").getUTCDay()];
 }
 
 function timeText(seconds: number) {
@@ -23,6 +22,33 @@ function timeText(seconds: number) {
     rest = seconds % 60;
   if (!minutes) return rest + "秒";
   return minutes + "分" + (rest ? rest + "秒" : "");
+}
+
+function ReportDates({ week }: { week: Report["week"] }) {
+  const [year, month, first] = week.start.split("-").map(Number);
+  const [endYear, endMonth, last] = week.end.split("-").map(Number);
+  return (
+    <p className="wr-dates">
+      <time dateTime={week.start}>
+        <span className="wr-month">
+          <span>{year} 年</span>
+          <b>{month} 月</b>
+        </span>
+        <strong>{first}</strong>
+      </time>
+      <span className="wr-date-dash">–</span>
+      <time dateTime={week.end}>
+        {(endYear !== year || endMonth !== month) && (
+          <span className="wr-month">
+            {endYear !== year && <span>{endYear} 年</span>}
+            <b>{endMonth} 月</b>
+          </span>
+        )}
+        <strong>{last}</strong>
+        <span className="wr-date-unit">日</span>
+      </time>
+    </p>
+  );
 }
 
 function Overview({ totals }: { totals: Totals }) {
@@ -50,92 +76,83 @@ function Overview({ totals }: { totals: Totals }) {
   );
 }
 
-function ActivityRadar({ report }: { report: Report }) {
+function ActivityBreakdown({ report }: { report: Report }) {
   const media = report.reading_by_medium;
-  const axes = [
-    ["纸质阅读", media.paper ?? 0],
-    ["手机阅读", media.phone ?? 0],
-    ["电脑阅读", media.computer ?? 0],
-    ["其他文字阅读", media.other_text ?? 0],
-    ["观看视频", report.totals.video],
-    ["暂停", report.totals.rest],
-  ] as const;
-  // Choose one whole-minute step for all four rings and all six axes.
-  const step = Math.max(
-    1,
-    Math.ceil(Math.max(...axes.map(([, s]) => s)) / 240),
-  );
+  const rows = [
+    { label: "纸质阅读", seconds: media.paper ?? 0, kind: "reading" },
+    { label: "手机阅读", seconds: media.phone ?? 0, kind: "reading" },
+    { label: "电脑阅读", seconds: media.computer ?? 0, kind: "reading" },
+    { label: "其他文字阅读", seconds: media.other_text ?? 0, kind: "reading" },
+    { label: "观看视频", seconds: report.totals.video, kind: "video" },
+    { label: "暂停", seconds: report.totals.rest, kind: "rest" },
+  ].sort((a, b) => b.seconds - a.seconds);
+  const stepMinutes = Math.max(1, Math.ceil(rows[0].seconds / (4 * 60)));
+  const maxSeconds = 4 * stepMinutes * 60;
+
   return (
-    <section className="wr-card" aria-labelledby="wr-radar-title">
-      <h2 id="wr-radar-title">各类活动用了多久</h2>
-      <p className="wr-sub">六个方向刻度相同，每格 {step} 分钟。</p>
-      <div className="wr-radar-body">
-        <Chart
-          height={222}
-          label="六类活动时长雷达图，准确时长见旁边的列表"
-          options={(width) => ({
-            animation: false,
-            radar: {
-              indicator: axes.map(([name]) => ({ name, max: step * 4 })),
-              radius: Math.min(82, (width - 108) / 2),
-              center: ["50%", "50%"],
-              splitNumber: 4,
-              axisNameGap: 7,
-              axisName: { color: "#40584d", fontSize: 12 },
-              axisLine: { lineStyle: { color: "#c3cfbd" } },
-              splitLine: { lineStyle: { color: "#c7d2c1" } },
-              splitArea: { areaStyle: { color: ["#f0f3e8", "#fafaf3"] } },
-            },
-            series: [
-              {
-                type: "radar",
-                symbol: "circle",
-                symbolSize: 6,
-                itemStyle: { color: "#245d4d" },
-                lineStyle: { width: 2, color: "#346b55" },
-                areaStyle: { color: "rgba(104,153,104,.44)" },
-                data: [{ value: axes.map(([, seconds]) => seconds / 60) }],
-              },
-            ],
-          })}
-        />
-        <dl className="wr-values">
-          {axes.map(([label, seconds]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{timeText(seconds)}</dd>
-            </div>
+    <section className="wr-breakdown" aria-labelledby="wr-activities">
+      <h2 id="wr-activities">各类活动用了多久</h2>
+      <div className="wr-rank-axis" aria-hidden="true">
+        <span>分钟</span>
+        <div>
+          {[0, 1, 2, 3, 4].map((tick) => (
+            <i key={tick} style={{ left: tick * 25 + "%" }}>
+              {tick * stepMinutes}
+            </i>
           ))}
-        </dl>
+        </div>
       </div>
-      <p className="wr-note">
-        另有{timeText(media.unknown ?? 0)}
-        已识别为阅读，载体待定。这部分已计入阅读总时长。
-      </p>
+      <ol className="wr-ranking" role="list" aria-label="六类活动时长">
+        {rows.map(({ label, seconds, kind }) => (
+          <li key={label}>
+            <span>{label}</span>
+            <span className="wr-rank-track" aria-hidden="true">
+              <i
+                className={"wr-fill-" + kind}
+                style={{ width: (seconds / maxSeconds) * 100 + "%" }}
+              />
+            </span>
+            <time dateTime={`PT${seconds}S`}>{timeText(seconds)}</time>
+          </li>
+        ))}
+      </ol>
+      {media.unknown > 0 && (
+        <p className="wr-note">
+          另有
+          <time dateTime={`PT${media.unknown}S`}>
+            {timeText(media.unknown)}
+          </time>
+          已识别为阅读，载体待定。这部分已计入阅读总时长。
+        </p>
+      )}
     </section>
   );
 }
 
 function DailyChart({ report }: { report: Report }) {
   const [selected, select] = useState(0);
-  const day = report.days[selected];
+  const day = report.days[selected] ?? report.days[0];
+  if (!day) return <p className="wr-note">本周暂无每日片段记录。</p>;
   const step = Math.max(
     1,
     Math.ceil(Math.max(...report.days.map((d) => d.totals.total)) / 300),
   );
   const maxSeconds = step * 5 * 60;
+  const clips = report.clips.filter((clip) => clip.date === day.date).length;
   return (
-    <section className="wr-card" aria-labelledby="wr-days-title">
+    <section className="wr-days" aria-labelledby="wr-days-title">
       <h2 id="wr-days-title">七天的活动分布</h2>
       <ul className="wr-legend" aria-label="图例">
         {activities.map(([key, label]) => (
           <li key={key}>
-            <i className={"wr-fill-" + key} />
+            <i className={"wr-fill-" + key} aria-hidden="true" />
             {label}
           </li>
         ))}
       </ul>
-      <div className="wr-chart-unit">分钟</div>
+      <div className="wr-chart-unit" aria-hidden="true">
+        分钟
+      </div>
       <div className="wr-day-chart">
         <div className="wr-scale" aria-hidden="true">
           {[5, 4, 3, 2, 1, 0].map((tick) => (
@@ -147,8 +164,8 @@ function DailyChart({ report }: { report: Report }) {
             <button
               key={d.date}
               type="button"
-              aria-pressed={i === selected}
-              aria-label={weekdays[i] + "，记录" + timeText(d.totals.total)}
+              aria-pressed={d.date === day.date}
+              aria-label={weekday(d.date) + "，记录" + timeText(d.totals.total)}
               aria-controls="wr-day-values"
               onMouseEnter={() => select(i)}
               onFocus={() => select(i)}
@@ -168,7 +185,7 @@ function DailyChart({ report }: { report: Report }) {
                   ))}
                 </span>
               </span>
-              <span className="wr-day-label">{weekdays[i]}</span>
+              <span className="wr-day-label">{weekday(d.date)}</span>
             </button>
           ))}
         </div>
@@ -177,96 +194,103 @@ function DailyChart({ report }: { report: Report }) {
         className="wr-day-values"
         id="wr-day-values"
         role="status"
-        aria-live="polite"
         aria-atomic="true"
       >
-        <strong>
-          {day.date.slice(5).replace("-", "/")} {weekdays[selected]}
-        </strong>
-        {activities.map(([key, label]) => (
-          <span key={key}>
-            {label} {timeText(day.totals[key])}
+        <div className="wr-slip-date">
+          <time dateTime={day.date}>{day.date.slice(5).replace("-", "/")}</time>
+          <span>
+            {weekday(day.date)} · {clips} 个片段
           </span>
-        ))}
+        </div>
+        <div className="wr-slip-times">
+          {activities.map(([key, label]) => (
+            <span key={key}>
+              {label}{" "}
+              <time dateTime={`PT${day.totals[key]}S`}>
+                {timeText(day.totals[key])}
+              </time>
+            </span>
+          ))}
+        </div>
       </div>
-      <p className="wr-note">
-        浅灰部分是尚未判定的活动，本周共 {timeText(report.totals.unknown)}。
-      </p>
+      {report.totals.unknown > 0 && (
+        <p className="wr-note">
+          灰色斜线是尚未判定的活动，本周共{" "}
+          <time dateTime={`PT${report.totals.unknown}S`}>
+            {timeText(report.totals.unknown)}
+          </time>
+          。
+        </p>
+      )}
     </section>
+  );
+}
+
+function keepDurationsTogether(text: string) {
+  return text.split(/(\d+分(?:\d+秒)?|\d+秒)/).map((part, index) =>
+    index % 2 === 1 ? (
+      <span className="wr-duration" key={index}>
+        {part}
+      </span>
+    ) : (
+      part
+    ),
   );
 }
 
 function ParentLetter({ report }: { report: Report }) {
   const letter = report.publication?.narrative;
   if (!letter)
-    return (
-      <p className="wr-card" role="status">
-        这份周报的文字解读尚未准备好。
-      </p>
-    );
+    return <p className="wr-letter wr-note">这份周报的文字解读尚未准备好。</p>;
   const facts = new Map(report.facts.map((f) => [f.id, f.text]));
   return (
-    <article className="wr-letter">
+    <div className="wr-letter">
       <section aria-labelledby="wr-observation">
         <h2 id="wr-observation">本周观察</h2>
-        <p className="wr-prose">{letter.summary}</p>
+        <p className="wr-prose">{keepDurationsTogether(letter.summary)}</p>
       </section>
-      <section aria-labelledby="wr-actions">
+      <section className="wr-actions" aria-labelledby="wr-actions">
         <h2 id="wr-actions">下周可以试试</h2>
-        <ul>
-          {letter.suggestions.map((s, i) => (
-            <li key={i}>
-              <p>{s.action}</p>
-              <small>{facts.get(s.fact_id)}</small>
+        <ul role="list">
+          {letter.suggestions.map((suggestion) => (
+            <li key={suggestion.fact_id}>
+              <div>
+                <p>{suggestion.action}</p>
+                <small>
+                  {keepDurationsTogether(facts.get(suggestion.fact_id) ?? "")}
+                </small>
+              </div>
+              {suggestion.fact_id === "paper" && (
+                <img src={windowScene} alt="" width="660" height="338" />
+              )}
             </li>
           ))}
         </ul>
       </section>
-    </article>
+    </div>
   );
 }
 
-export default function Reports() {
-  const resource = usePublic<Report>("/eye-care/weekly-report");
-  if (!resource.data) return <Loading {...resource} />;
-  const r = resource.data;
+function ClipSources({ clips }: { clips: Report["clips"] }) {
   return (
-    <div className="weekly-report">
-      <header className="wr-heading">
-        <div>
-          <h1>{r.student_label}的用眼周报</h1>
-          <p className="wr-dates">
-            <time dateTime={r.week.start}>{calendarDate(r.week.start)}</time>
-            {" 至 "}
-            <time dateTime={r.week.end}>
-              {calendarDate(
-                r.week.end,
-                r.week.start.slice(0, 4) !== r.week.end.slice(0, 4),
-              )}
-            </time>
-          </p>
-          <p className="wr-source">{r.source_note}</p>
-        </div>
-        <img src="/products/frame-open.webp" alt="" />
-      </header>
-      <Overview totals={r.totals} />
-      <div className="wr-charts">
-        <ActivityRadar report={r} />
-        <DailyChart report={r} />
-      </div>
-      <ParentLetter report={r} />
-      <details className="wr-sources">
-        <summary>查看 {r.clips.length} 段录像的来源与区间</summary>
+    <details className="wr-sources">
+      <summary>查看 {clips.length} 段录像的来源与区间</summary>
+      <div
+        className="wr-table-wrap"
+        role="region"
+        aria-label="原录像区间"
+        tabIndex={0}
+      >
         <table>
           <thead>
             <tr>
-              <th>编排日期</th>
-              <th>Meta 录像 ID</th>
-              <th>原录像起止时间</th>
+              <th scope="col">编排日期</th>
+              <th scope="col">Meta 录像 ID</th>
+              <th scope="col">原录像起止时间</th>
             </tr>
           </thead>
           <tbody>
-            {[...r.clips]
+            {[...clips]
               .sort((a, b) => a.date.localeCompare(b.date))
               .map((c) => (
                 <tr key={c.id}>
@@ -279,7 +303,43 @@ export default function Reports() {
               ))}
           </tbody>
         </table>
-      </details>
+      </div>
+    </details>
+  );
+}
+
+export default function Reports() {
+  const resource = usePublic<Report>("/eye-care/weekly-report");
+  if (!resource.data) return <Loading {...resource} />;
+  const r = resource.data;
+  return (
+    <div className="weekly-report">
+      <article className="wr-book" aria-labelledby="wr-title">
+        <div className="wr-page wr-page-week">
+          <header className="wr-heading">
+            <div className="wr-dateline">
+              <ReportDates week={r.week} />
+              <span className="wr-frame-mark" aria-hidden="true">
+                <img
+                  src="/products/frame-open.webp"
+                  alt=""
+                  width="1440"
+                  height="833"
+                />
+              </span>
+            </div>
+            <h1 id="wr-title">{r.student_label}的用眼周报</h1>
+            <p className="wr-source">{r.source_note}</p>
+          </header>
+          <Overview totals={r.totals} />
+          <ActivityBreakdown report={r} />
+        </div>
+        <div className="wr-page wr-page-daily">
+          <DailyChart key={r.week.start} report={r} />
+          <ParentLetter report={r} />
+        </div>
+      </article>
+      <ClipSources clips={r.clips} />
     </div>
   );
 }

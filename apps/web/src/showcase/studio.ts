@@ -268,10 +268,6 @@ export function cameraPose(
       return clip
         ? frame(anchor("tof"), -0.1, 0.2, 0.63, 0.36)
         : frame(center(0, 0.055, -0.045), 0.12, 0.13, 1.49, 0.61);
-    if (chapter === "construction")
-      return clip
-        ? frame(anchor("clip-core"), -0.18, 0.32, 0.6, 0.36)
-        : frame(center(-0.36, 0.06, -0.49), -1.94, 0.39, 1.36, 0.72);
     return frame(
       center(0, 0, -0.38),
       clip ? -0.38 : 0.55,

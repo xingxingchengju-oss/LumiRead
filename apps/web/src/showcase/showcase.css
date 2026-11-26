@@ -311,7 +311,16 @@
   outline-offset: 0;
   border-radius: 12px;
 }
-.lr-stage:not([data-hero="true"]) .lr-surface {
+.lr-model-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 160ms ease;
+}
+.lr-stage[data-guided="true"] .lr-model-layer {
+  opacity: 0;
+  pointer-events: none;
+}
+.lr-stage:not([data-hero="true"]) .lr-model-layer {
   mask-image: linear-gradient(to right, #000 54%, transparent 65%);
 }
 .lr-canvas {
@@ -1080,7 +1089,7 @@
   .lr-show .lr-lens-prompt {
     bottom: 19%;
   }
-  .lr-stage:not([data-hero="true"]) .lr-surface {
+  .lr-stage:not([data-hero="true"]) .lr-model-layer {
     mask-image: linear-gradient(to bottom, black 35%, transparent 43%);
   }
   .lr-stage[data-hero="true"] .lr-poster {
@@ -1164,6 +1173,15 @@
   }
   .lr-service {
     padding: 0.65rem 0 0.35rem;
+  }
+}
+@media (max-width: 700px) and (max-height: 640px) and (orientation: portrait) {
+  .lr-stage[data-chapter="explore"]:not([data-focus="true"]) .lr-copy {
+    top: 35%;
+    bottom: 53px;
+  }
+  .lr-stage[data-chapter="explore"]:not([data-focus="true"]) .lr-model-layer {
+    mask-image: linear-gradient(to bottom, black 29%, transparent 36%);
   }
 }
 @media (max-height: 610px) and (min-width: 701px) {

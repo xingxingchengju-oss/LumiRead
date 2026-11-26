@@ -1,7 +1,8 @@
 """Build the LumiRead design-C optics, labelled GLBs and transparent WebP posters.
 
 Run with Blender --background --factory-startup --python render-products.py.
-Use -- --models-only to omit rendering. Design dimensions are in millimetres.
+Use -- --models-only to omit rendering, or -- --guide-covers-only to render
+just the closed shells for the scroll guide. Design dimensions are in millimetres.
 Blender's Y points towards the ears; in glTF the glasses face +Z, Y points up
 and one scene unit represents 100 mm.
 """
@@ -1438,6 +1439,11 @@ def poster(scene, name, azimuth, elevation, focus=None, span=None, retina=False)
         for o in scene.objects
         if o.get("anchor") or o.get("posterAnchor")
     }
+    if focus == "board":
+        anchors["processor"] = scene.objects["Processor package"]
+    elif focus == "clip-core":
+        anchors["pcb"] = scene.objects["Clip radio and sensor PCB"]
+        anchors["cell"] = scene.objects["Clip cell foil"]
     slope = math.tan(math.radians(12))
     aspect = 1440 / 850
     if focus:
@@ -1534,7 +1540,7 @@ def export_glb(name):
     )
 
 
-def render_views(name, scene):
+def render_views(name, scene, covers_only=False):
     # Preserve original materials across passes; all optical modes share one master mesh.
     meshes = [o for o in scene.objects if o.type == "MESH"]
     original = {o: list(o.data.materials) for o in meshes}
@@ -1561,7 +1567,16 @@ def render_views(name, scene):
                         cutaway if shell and part == shell else mat
                     )
 
+    section_view = (
+        ("board", -87, 13, 0.48, "temple-right")
+        if name == "frame"
+        else ("clip-core", -8, 22, 0.55, "shell")
+    )
+    part, az, el, span, _ = section_view
     mode()
+    cover_points = poster(scene, name + "-closed", az, el, focus=part, span=span)
+    if covers_only:
+        return {("frame-board" if name == "frame" else "clip-inside"): cover_points}
     points = {name: poster(scene, name, 27, 12, retina=True)}
     if name == "frame":
         mode(open_lens=True)
@@ -1573,7 +1588,7 @@ def render_views(name, scene):
             ("tof", 9, 12, 0.26, None),
             ("light", 13, 10, 0.20, None),
             ("eye", 154, 12, 0.19, None),
-            ("board", -87, 13, 0.48, "temple-right"),
+            section_view,
             ("imu", -88, 9, 0.18, "temple-right"),
             ("radio", -88, 9, 0.18, "temple-right"),
             ("battery", 88, 12, 0.51, "temple-left"),
@@ -1585,7 +1600,7 @@ def render_views(name, scene):
             ("camera", -8, 15, 0.21, None),
             ("tof", 8, 13, 0.21, None),
             ("light", 9, 12, 0.20, None),
-            ("clip-core", -8, 22, 0.55, "shell"),
+            section_view,
             ("clamp", 155, 35, 0.43, None),
             ("button", 12, 53, 0.32, None),
             ("charge", 14, -60, 0.34, None),
@@ -1605,18 +1620,23 @@ def main():
         OUT = Path(args[args.index("--output") + 1]).resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     points = {}
+    covers_only = "--guide-covers-only" in args
+    manifest = OUT / "poster-points.json"
+    if covers_only and manifest.is_file():
+        points = json.loads(manifest.read_text(encoding="utf-8"))
     for name, build in [("frame", integrated), ("clip", clipped)]:
         bpy.ops.wm.read_factory_settings(use_empty=True)
         build(materials())
         bpy.context.view_layer.update()
+        if covers_only:
+            points.update(render_views(name, studio(), covers_only=True))
+            continue
         export_glb(name)
         ground_shadow(name)
         if "--models-only" not in args:
             points.update(render_views(name, studio()))
     if points:
-        (OUT / "poster-points.json").write_text(
-            json.dumps(points, indent=2) + "\n", encoding="utf-8"
-        )
+        manifest.write_text(json.dumps(points, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

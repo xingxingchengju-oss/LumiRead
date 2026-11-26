@@ -18,6 +18,26 @@ async function audit(page: Page) {
   ).toBeTruthy();
 }
 
+test("the weekly spread and its single-page layout pass WCAG A/AA checks", async ({
+  page,
+}) => {
+  await page.goto("/#reports");
+  const weekly = page.locator(".wr-page-week");
+  const daily = page.locator(".wr-page-daily");
+  await expect(
+    page.getByRole("heading", { name: "小禾的用眼周报" }),
+  ).toBeVisible();
+  for (const width of [1360, 960, 959, 390, 320]) {
+    await page.setViewportSize({ width, height: width >= 960 ? 920 : 844 });
+    const left = await weekly.boundingBox();
+    const right = await daily.boundingBox();
+    if (width >= 960) expect(right!.y).toBeCloseTo(left!.y);
+    else expect(right!.y).toBeGreaterThanOrEqual(left!.y + left!.height - 1);
+    if (width === 320) await page.locator(".wr-sources summary").click();
+    if ([1360, 390, 320].includes(width)) await audit(page);
+  }
+});
+
 test("keyboard access and WCAG A/AA automated checks for the product page and three parent views on a narrow screen", async ({
   page,
 }) => {

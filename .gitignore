@@ -37,6 +37,8 @@ playwright-report/
 !/reports/showcase/desktop.png
 !/reports/showcase/mobile.png
 !/reports/showcase/eyecare.png
+!/reports/showcase/frame-structure.png
+!/reports/showcase/clip-structure.png
 
 # Project Aria access manifests contain temporary personal download URLs.
 ritw_download_urls*.json

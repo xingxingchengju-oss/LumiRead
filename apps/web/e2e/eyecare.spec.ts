@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { existsSync } from "node:fs";
 import type { components } from "../../../packages/contracts/types";
@@ -212,6 +212,20 @@ test("reading an article pauses a playing clip and restores its speed and source
   expect(await time()).toBe(paused);
 });
 
+async function expectWeeklyRanking(page: Page) {
+  const rows = page
+    .getByRole("list", { name: "六类活动时长" })
+    .getByRole("listitem");
+  await expect(rows).toHaveText([
+    /观看视频\s*17分31秒/,
+    /纸质阅读\s*7分24秒/,
+    /手机阅读\s*6分15秒/,
+    /暂停\s*4分54秒/,
+    /电脑阅读\s*2分51秒/,
+    /其他文字阅读\s*1分28秒/,
+  ]);
+}
+
 test("weekly report opens from the handbook and reuses its published text offline", async ({
   page,
 }) => {
@@ -239,21 +253,60 @@ test("weekly report opens from the handbook and reuses its published text offlin
     await expect(totals).toContainText(time);
   await expect(page.getByText(/33秒\s*已识别为阅读/)).toBeVisible();
   await expect(page.getByText(/8分48秒/)).toBeVisible();
-  await expect(
-    page.getByRole("img", { name: /六类活动时长雷达图/ }).locator("svg"),
-  ).toBeVisible();
+  await expectWeeklyRanking(page);
   const days = page
     .getByRole("group", { name: "选择日期查看片段时长" })
     .getByRole("button");
   await expect(days).toHaveCount(7);
+  await expect(days.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("status")).toContainText("周一 · 3 个片段");
   await days.nth(2).hover();
+  await expect(days.nth(2)).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("status")).toContainText("阅读 3分22秒");
-  await days.last().focus();
+  const report: components["schemas"]["WeeklyReport"] = await (
+    await page.request.get("/api/v1/eye-care/weekly-report")
+  ).json();
+  const slip = page.getByRole("status");
+  for (const [index, day] of report.days.entries()) {
+    await days.nth(index).hover();
+    await expect(slip.locator(".wr-slip-date time")).toHaveAttribute(
+      "datetime",
+      day.date,
+    );
+    const clips = report.clips.filter((clip) => clip.date === day.date);
+    await expect(slip).toContainText(`${clips.length} 个片段`);
+    const times = await slip
+      .locator(".wr-slip-times time")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("datetime")),
+      );
+    expect(times).toEqual(
+      [
+        day.totals.reading,
+        day.totals.video,
+        day.totals.rest,
+        day.totals.unknown,
+      ].map((seconds) => `PT${seconds}S`),
+    );
+  }
+  await days.nth(5).focus();
+  await page.keyboard.press("Tab");
+  await expect(days.last()).toBeFocused();
+  await expect(days.last()).toHaveCSS("outline-style", "solid");
   await expect(page.getByRole("status")).toContainText("活动待定 4分15秒");
   const summary = await page.getByLabel("本周观察").locator("p").innerText();
-  await expect(
-    page.getByLabel("下周可以试试").getByRole("listitem"),
-  ).toHaveCount(2);
+  const suggestions = page.getByLabel("下周可以试试").getByRole("listitem");
+  await expect(suggestions).toHaveCount(2);
+  await expect(suggestions.first()).toContainText("纸质阅读合计7分24秒");
+  await expect(suggestions.last()).toContainText("观看视频的时间合计17分31秒");
+  await expect
+    .poll(() =>
+      suggestions
+        .first()
+        .locator("img")
+        .evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
+    .toBeGreaterThan(0);
   const sources = page.locator(".wr-sources");
   await sources.locator("summary").click();
   await expect(sources.locator("tbody tr")).toHaveCount(15);
@@ -264,6 +317,9 @@ test("weekly report opens from the handbook and reuses its published text offlin
   ).toBeVisible();
   expect(external).toEqual([]);
   await page.screenshot({
+    path: test.info().outputPath("weekly-desktop-1360x920.png"),
+  });
+  await page.screenshot({
     path: test.info().outputPath("weekly-desktop.png"),
     fullPage: true,
   });
@@ -273,7 +329,12 @@ test.describe("weekly report on a touch screen", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
   test("tapping a day reveals its four durations", async ({ page }) => {
     await page.goto("/#reports");
+    await expectWeeklyRanking(page);
+    await page.screenshot({
+      path: test.info().outputPath("weekly-mobile-390x844.png"),
+    });
     await page.getByRole("button", { name: /周日，记录/ }).tap();
+    await expect(page.getByRole("status")).toContainText("周日 · 2 个片段");
     for (const duration of [
       "阅读 36秒",
       "视频 34秒",
@@ -288,9 +349,6 @@ test.describe("weekly report on a touch screen", () => {
     await expect(
       page.getByRole("heading", { name: "下周可以试试" }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("img", { name: /六类活动时长雷达图/ }).locator("svg"),
-    ).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -302,10 +360,62 @@ test.describe("weekly report on a touch screen", () => {
     });
     await page.setViewportSize({ width: 320, height: 844 });
     await page.locator(".wr-sources summary").tap();
+    await expect(page.getByRole("table").getByRole("row")).toHaveCount(16);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
       .toBe(320);
   });
+});
+
+test("an unpublished week can be retried and read across a year boundary", async ({
+  page,
+}) => {
+  const report: components["schemas"]["WeeklyReport"] = await (
+    await page.request.get("/api/v1/eye-care/weekly-report")
+  ).json();
+  const dates = [
+    "2026-12-28",
+    "2026-12-29",
+    "2026-12-30",
+    "2026-12-31",
+    "2027-01-01",
+    "2027-01-02",
+    "2027-01-03",
+  ];
+  const zero = { total: 0, reading: 0, video: 0, rest: 0, unknown: 0 };
+  const totals = { ...zero, total: 61, reading: 61 };
+  let attempts = 0;
+  await page.route("**/eye-care/weekly-report", (route) => {
+    if (++attempts === 1) return route.fulfill({ status: 503 });
+    return route.fulfill({
+      json: {
+        ...report,
+        week: { start: dates[0], end: dates[6] },
+        totals,
+        reading_by_medium: { phone: 61 },
+        days: dates.map((date, i) => ({
+          date,
+          totals: i === 0 ? totals : zero,
+        })),
+        clips: [{ id: "sample", date: dates[0], start: 0, end: 61 }],
+        facts: [],
+        publication: null,
+      },
+    });
+  });
+  await page.goto("/#reports");
+  await page.getByRole("button", { name: "重试" }).click();
+  await expect(page.getByText("这份周报的文字解读尚未准备好。")).toBeVisible();
+  await expect(page.locator(".wr-dates time").last()).toContainText("2027 年");
+  await expect(
+    page
+      .getByRole("list", { name: "六类活动时长" })
+      .getByRole("listitem")
+      .first(),
+  ).toHaveText(/手机阅读\s*1分1秒/);
+  await page.getByRole("button", { name: "周日，记录0秒" }).click();
+  await expect(page.getByRole("status")).toContainText("周日 · 0 个片段");
+  await expect(page.getByRole("status")).toContainText("阅读 0秒");
 });
 
 test("a threshold reminder is announced once when replaying its source time", async ({

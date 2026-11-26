@@ -28,7 +28,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
-  chapters,
+  cameraChapters,
   exposedShell,
   interactivePart,
   markers,
@@ -128,7 +128,7 @@ function Studio(
   const part = props.selected?.part;
   const stops = useMemo(
     () =>
-      chapters.map((c) =>
+      cameraChapters.map((c) =>
         cameraPose(
           model,
           c.id,
@@ -162,6 +162,7 @@ function Studio(
   } | null>(null);
   const installedAt = useRef(performance.now()),
     first = useRef(true),
+    resuming = useRef(false),
     scrollPosition = useRef(props.track.current.progress),
     lastProgress = useRef(-1);
   const controls = useRef({
@@ -206,14 +207,19 @@ function Studio(
   }, [model]);
   useLayoutEffect(() => {
     const track = props.track.current;
+    if (props.sleep) {
+      resuming.current = true;
+      return;
+    }
     track.redraw = invalidate;
     return () => {
       if (track.redraw === invalidate) track.redraw = undefined;
     };
-  }, [props.track, invalidate]);
+  }, [props.track, props.sleep, invalidate]);
   useLayoutEffect(() => {
     const c = controls.current;
-    if (first.current || props.reduced) travel.current = null;
+    if (first.current || props.reduced || resuming.current)
+      travel.current = null;
     else {
       const from = copyPose(actual.current);
       from.yaw += c.yaw + c.drift + c.shift;
@@ -407,6 +413,8 @@ function Studio(
     }
     function keydown(e: KeyboardEvent) {
       if (
+        live.current.sleep ||
+        (live.current.chapter === "construction" && !live.current.selected) ||
         e.target !== surface ||
         !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
       )
@@ -458,8 +466,20 @@ function Studio(
       c = controls.current;
     const raw = props.track.current.progress;
     const goal = props.reduced ? Math.round(raw) : raw;
+    const price = stops.length - 1;
+    const cut =
+      resuming.current ||
+      (!part &&
+        goal !== scrollPosition.current &&
+        (goal === price || scrollPosition.current === price));
+    if (cut) {
+      travel.current = null;
+      c.yaw = c.pitch = c.drift = c.shift = c.shiftY = c.hover = c.hoverY = 0;
+      c.spinYaw = c.spinPitch = 0;
+      resuming.current = false;
+    }
     const follow =
-      first.current || props.reduced || part
+      cut || first.current || props.reduced || part
         ? goal
         : MathUtils.damp(scrollPosition.current, goal, 25, dt);
     const progress = Math.abs(follow - goal) < 0.0007 ? goal : follow;
@@ -560,16 +580,10 @@ function Studio(
       }
       moving ||= a < 1;
     }
-    const structure = chapters.findIndex((ch) => ch.id === "construction");
-    const auto = ease(1 - Math.min(1, Math.abs(progress - structure)));
-    const shell = part
-      ? exposedShell(part, isClip)
-      : isClip
-        ? "shell"
-        : "temple-right";
-    const wanted = shell ? (part ? 1 : auto) : 0;
+    const shell = exposedShell(part, isClip);
+    const wanted = shell ? 1 : 0;
     sectionWeight.current =
-      props.reduced || !part
+      props.reduced || cut || !part
         ? wanted
         : MathUtils.damp(sectionWeight.current, wanted, 17, dt);
     if (Math.abs(sectionWeight.current - wanted) < 0.006)
@@ -582,8 +596,8 @@ function Studio(
     const wash = part
       ? Number(part === "lens")
       : MathUtils.lerp(
-          luminous(chapters[low].id),
-          luminous(chapters[high].id),
+          luminous(cameraChapters[low].id),
+          luminous(cameraChapters[high].id),
           blend,
         );
     scene.environmentIntensity = 1.05 + wash * 0.32;
@@ -727,7 +741,7 @@ export default function Viewer(props: Props) {
         <Canvas
           camera={{ fov: 24, near: 0.025, far: 40, position: [1, 0.5, 4] }}
           dpr={[1, 2]}
-          frameloop="demand"
+          frameloop={props.sleep ? "never" : "demand"}
           gl={{
             alpha: true,
             antialias: true,
@@ -749,25 +763,26 @@ export default function Viewer(props: Props) {
       {props.selected?.part === "tof" && (
         <span className="lr-range-origin" ref={origin} aria-hidden="true" />
       )}
-      {markers(props.chapter, props.wear === "clip", !!props.selected).map(
-        (id) => (
-          <button
-            type="button"
-            hidden
-            key={id}
-            className="lr-pin"
-            data-return={"pin-" + id}
-            aria-label={parts[id].name + "热点"}
-            ref={(el) => {
-              if (el) pins.current.set(id, el);
-              else pins.current.delete(id);
-            }}
-            onClick={(e) => props.select({ part: id }, e.currentTarget)}
-          >
-            <span aria-hidden="true">+</span>
-          </button>
-        ),
-      )}
+      {props.chapter !== "construction" &&
+        markers(props.chapter, props.wear === "clip", !!props.selected).map(
+          (id) => (
+            <button
+              type="button"
+              hidden
+              key={id}
+              className="lr-pin"
+              data-return={"pin-" + id}
+              aria-label={parts[id].name + "热点"}
+              ref={(el) => {
+                if (el) pins.current.set(id, el);
+                else pins.current.delete(id);
+              }}
+              onClick={(e) => props.select({ part: id }, e.currentTarget)}
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          ),
+        )}
     </div>
   );
 }
